@@ -35,7 +35,8 @@
     "build": "vite build",
     "dev-host": "vite --host",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "overrides": {
     "react-snowfall": {
@@ -69,6 +70,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "vite": "^7.0.4",
-    "vite-plugin-pwa": "^1.0.1"
+    "vite-plugin-pwa": "^1.0.1",
+    "vitest": "^4.1.10"
   }
 }

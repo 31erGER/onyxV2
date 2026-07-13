@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import BleConnectButtonContainer from "./features/deviceBLEconnection/BleContainer";
 import VolcanoLoaderLoader from "./features/shared/OutletRenderer/VolcanoLoaderLoader";
@@ -10,12 +10,12 @@ import Settings from "./features/settings/Settings";
 import styled, { createGlobalStyle } from "styled-components";
 import { ThemeProvider } from "styled-components";
 import { useSelector } from "react-redux";
-import GetTheme from "./themes/ThemeProvider";
+import createNeumorphicTheme from "./themes/neumorphic/createNeumorphicTheme";
+import useResolvedMode from "./themes/neumorphic/useResolvedMode";
 import WorkflowEditor from "./features/workflowEditor/WorkflowEditor";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
-import Snowfall from "./features/shared/Snowfall";
 import { isMobile } from "./constants/constants";
 import DragPreview from "./features/workflowEditor/DND/DragPreview";
 import MinimalistLayout from "./features/shared/MinimalistLayout";
@@ -94,8 +94,21 @@ function App() {
     };
   }, []);
 
-  const themeId = useSelector(
-    (state) => state.settings.config?.currentTheme || GetTheme().themeId
+  const appearanceMode = useSelector(
+    (state) => state.settings.config?.appearanceMode || "auto"
+  );
+  const accentColors = useSelector(
+    (state) => state.settings.config?.accentColors
+  );
+  const resolvedMode = useResolvedMode(appearanceMode);
+  const theme = useMemo(
+    () =>
+      createNeumorphicTheme(
+        resolvedMode,
+        accentColors?.start,
+        accentColors?.end
+      ),
+    [resolvedMode, accentColors?.start, accentColors?.end]
   );
   const isMinimalistMode = useSelector((state) => state.settings.config?.isMinimalistMode || false);
   
@@ -106,8 +119,15 @@ function App() {
   const isHeatOn = useSelector((state) => state.deviceInteraction.isHeatOn);
 
   useEffect(() => {
-    document.body.style = `background: ${GetTheme(themeId).backgroundColor};`;
-  }, [themeId]);
+    document.body.style.background = theme.backgroundColor;
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", theme.backgroundColor);
+  }, [theme]);
 
   // Update page title with current and target temperature (works for both regular and minimalist mode)
   useEffect(() => {
@@ -145,24 +165,19 @@ function App() {
   }, [currentTemperature, targetTemperature, isF, isHeatOn]);
 
   return (
-    <>
-      <DndProvider
-        backend={window.ontouchstart || isMobile ? TouchBackend : HTML5Backend}
-      >
-        <ThemeProvider theme={GetTheme(themeId)}>
-          <GlobalStyle />
-          <DragPreview />
-          <Div>
-            <BrowserRouter>
-              <AppRoutes isMinimalistMode={isMinimalistMode} />
-            </BrowserRouter>
-          </Div>
-        </ThemeProvider>
-      </DndProvider>
-      <>
-        <Snowfall />
-      </>
-    </>
+    <DndProvider
+      backend={window.ontouchstart || isMobile ? TouchBackend : HTML5Backend}
+    >
+      <ThemeProvider theme={theme}>
+        <GlobalStyle />
+        <DragPreview />
+        <Div>
+          <BrowserRouter>
+            <AppRoutes isMinimalistMode={isMinimalistMode} />
+          </BrowserRouter>
+        </Div>
+      </ThemeProvider>
+    </DndProvider>
   );
 }
 

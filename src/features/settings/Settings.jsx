@@ -15,6 +15,7 @@ import PWAInstall, { usePWAInstallAvailable } from "./InstallPWA/PWAInstall";
 import SettingsSection from "./SettingsSection";
 import DeviceInformation from "../deviceInformation/DeviceInformation";
 import LanguageSelector from "./LanguageSelector/LanguageSelector";
+import MinimalistModeToggle from "../shared/MinimalistModeToggle";
 import { useTranslation } from "react-i18next";
 
 export default function Settings() {
@@ -44,6 +45,7 @@ export default function Settings() {
         <TurnHeatOnWhenConnectionIsEstablished />
         <HighlightLastRunWorkflow />
         <TemperatureControlSettings />
+        <MinimalistModeToggle />
       </SettingsSection>
 
       {isPWAAvailable && (

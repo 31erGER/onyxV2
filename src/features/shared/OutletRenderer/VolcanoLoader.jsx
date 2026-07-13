@@ -1,24 +1,13 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { Outlet, useNavigate, Link } from "react-router-dom";
+import { useEffect, useCallback } from "react";
 import {
   clearCache,
   getCharacteristic,
 } from "../../../services/BleCharacteristicCache";
 import * as uuIds from "../../../constants/uuids";
 import "./Volcano.css";
-import ControlsIcon from "./icons/ControlsIcon";
-import InformationIcon from "./icons/InformationIcon";
-import BluetoothDisconnectIcon from "./icons/BluetoothDisconnectIcon";
-import SettingsIcon from "./icons/SettingsIcon";
-import MenuBarIcon from "./icons/MenuBarIcon";
-import { StyledRouterIconLink } from "./icons/Shared/IconLink";
-import WorkflowEditorIcon from "./icons/WorkflowEditorIcon";
-import { PrideTextWithDiv } from "../../../themes/PrideText";
-import Navbar from "react-bootstrap/Navbar";
-import Nav from "react-bootstrap/Nav";
-import styled, { useTheme } from "styled-components";
-import ContactMeIcon from "./icons/ContactMeIcon";
-import Container from "react-bootstrap/Container";
+import BottomNav from "../BottomNav/BottomNav";
+import styled from "styled-components";
 import { heatingMask, fanMask, fahrenheitMask } from "../../../constants/masks";
 import {
   convertBLEtoUint16,
@@ -30,13 +19,11 @@ import {
   setIsHeatOn,
   setIsFanOn,
 } from "../../deviceInteraction/deviceInteractionSlice";
-import { setIsF, setIsMinimalistMode } from "../../settings/settingsSlice";
+import { setIsF } from "../../settings/settingsSlice";
 import { AddToQueue } from "../../../services/bleQueueing";
-import { feastOfSaintPatrickId } from "../../../constants/themeIds";
 import CurrentWorkflowExecutionDisplay from "../../deviceInteraction/CurrentWorkflowExecutionDisplay.jsx/CurrentWorkflowExecutionDisplay";
 import withScrolling from "react-dnd-scrolling";
 import AutoOff from "../../deviceInteraction/AutoOff/AutoOff";
-import { useTranslation } from "react-i18next";
 
 const ScrollingDiv = withScrolling("div");
 
@@ -54,76 +41,26 @@ const ContentWrapper = styled.div`
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  padding-bottom: 5.5rem;
 `;
 
-const StyledNavBar = styled(Navbar)`
-  background: ${(props) => props.theme.backgroundColor};
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem 0.25rem;
   flex-shrink: 0;
 `;
 
-const StyledNavBarToggle = styled(Navbar.Toggle)`
-  background: ${(props) => props.theme.backgroundColor};
-  border-color: ${(props) => props.theme.iconColor} !important;
-  border-width: light;
-  padding: 5px;
-`;
-
-const StyledNav = styled(Nav)`
-  justify-content: flex-end;
-  flex-grow: 1;
-  margin-left: auto;
-  width: 100%;
-  text-align: right;
-  
-  & > * {
-    margin-left: auto;
-    justify-content: flex-end;
-  }
-  
-  @media (max-width: 991.98px) {
-    align-items: flex-end;
-    
-    & > * {
-      align-self: flex-end;
-      text-align: right;
-    }
-  }
-`;
-
-const StyledHeaderNavDiv = styled(StyledRouterIconLink)`
-  color: ${(props) => props.theme.iconColor};
-`;
-
-const WhiteMenuIconWrapper = styled.div`
-  color: ${(props) => props.theme.primaryFontColor};
-  
-  & > div {
-    color: ${(props) => props.theme.primaryFontColor};
-  }
-  
-  & svg {
-    color: ${(props) => props.theme.primaryFontColor};
-  }
+const BrandLink = styled(Link)`
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  color: ${(p) => p.theme.neumorphic.text};
 `;
 
 export default function VolcanoLoader(props) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const navBarToggleOnClick = () => {
-    setExpanded(expanded ? false : "expanded");
-  };
-
-  const onLinkClick = () => {
-    setExpanded(false);
-  };
 
   const OnDisconnectClick = async () => {
     const bleDevice = getCharacteristic(uuIds.bleDeviceUuid);
@@ -131,13 +68,6 @@ export default function VolcanoLoader(props) {
     clearCache();
     navigate("/");
   };
-
-  const onMinimalistModeClick = () => {
-    dispatch(setIsMinimalistMode(true));
-    setExpanded(false);
-  };
-
-  const theme = useTheme();
 
   /* eslint-disable no-unused-vars */
   //little hack to make Pridetext reaminate when these states change
@@ -274,7 +204,6 @@ export default function VolcanoLoader(props) {
   }, [dispatch]);
 
   const outletStyling = {
-    zIndex: theme.themeId === feastOfSaintPatrickId ? "2" : undefined,
     display: "flex",
     justifyContent: "space-between",
     flexGrow: "1",
@@ -282,74 +211,11 @@ export default function VolcanoLoader(props) {
 
   return (
     <MainWrapper>
-      <StyledNavBar
-        expand="lg"
-        expanded={expanded}
-        onToggle={navBarToggleOnClick}
-      >
-        <Container>
-          <Navbar.Brand>
-            <div style={{ display: "flex" }}>
-              <StyledHeaderNavDiv onClick={onLinkClick} to="/Volcano/App">
-                <PrideTextWithDiv text="Project Onyx" />
-              </StyledHeaderNavDiv>
-              <AutoOff style={{ marginLeft: "10px" }} />
-              <CurrentWorkflowExecutionDisplay />
-            </div>
-          </Navbar.Brand>
-
-          <StyledNavBarToggle
-            onClick={navBarToggleOnClick}
-            aria-controls="basic-navbar-nav"
-          >
-            <WhiteMenuIconWrapper onClick={navBarToggleOnClick}>
-              <MenuBarIcon />
-            </WhiteMenuIconWrapper>
-          </StyledNavBarToggle>
-          <Navbar.Collapse id="basic-navbar-nav">
-            <StyledNav>
-              <StyledRouterIconLink onClick={onLinkClick} to="/Volcano/App">
-                {<ControlsIcon />}
-                {<PrideTextWithDiv text={t("navigation.controls")} />}
-              </StyledRouterIconLink>
-              <StyledRouterIconLink
-                as="div"
-                onClick={onMinimalistModeClick}
-                style={{ cursor: "pointer" }}
-              >
-                <MenuBarIcon />
-                <PrideTextWithDiv text={t("navigation.miniMode")} />
-              </StyledRouterIconLink>
-              <StyledRouterIconLink
-                onClick={onLinkClick}
-                to="/Volcano/WorkflowEditor"
-              >
-                {<WorkflowEditorIcon />}
-                {<PrideTextWithDiv text={t("navigation.workflowEditor")} />}
-              </StyledRouterIconLink>
-              <StyledRouterIconLink
-                onClick={onLinkClick}
-                to="/Volcano/ContactMe"
-              >
-                {<ContactMeIcon />}
-                {<PrideTextWithDiv text={t("navigation.contactMe")} />}
-              </StyledRouterIconLink>
-              <StyledRouterIconLink
-                onClick={onLinkClick}
-                to="/Volcano/Settings"
-              >
-                {<SettingsIcon />}
-                {<PrideTextWithDiv text={t("navigation.settings")} />}
-              </StyledRouterIconLink>
-
-              <StyledRouterIconLink to="/" onClick={OnDisconnectClick}>
-                <BluetoothDisconnectIcon />
-                <PrideTextWithDiv text={t("navigation.disconnect")} />
-              </StyledRouterIconLink>
-            </StyledNav>
-          </Navbar.Collapse>
-        </Container>
-      </StyledNavBar>
+      <Header>
+        <BrandLink to="/Volcano/App">Project Onyx</BrandLink>
+        <AutoOff style={{ marginLeft: "10px" }} />
+        <CurrentWorkflowExecutionDisplay />
+      </Header>
 
       <ContentWrapper>
         <ScrollingDiv className="main-div">
@@ -358,6 +224,8 @@ export default function VolcanoLoader(props) {
           </div>
         </ScrollingDiv>
       </ContentWrapper>
+
+      <BottomNav onDisconnect={OnDisconnectClick} />
     </MainWrapper>
   );
 }

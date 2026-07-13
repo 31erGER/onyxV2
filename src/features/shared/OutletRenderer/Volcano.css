@@ -1,0 +1,52 @@
+.heat-air-div {
+  display: flex;
+  min-height: 100px;
+  justify-content: space-evenly;
+}
+
+.heat-air-button {
+  display: flex;
+  flex-grow: 1;
+  font: x-large;
+  max-width: 50%;
+  margin: 0px 2.5px 0px;
+}
+
+.disconnect-last-synced-div {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 5px;
+}
+
+.temperature-write-div {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: space-evenly;
+}
+
+.workflow-placeholder-button {
+  opacity: 0;
+  cursor: default;
+}
+
+.workflow-placeholder-button:hover {
+  opacity: 0;
+  cursor: default;
+}
+
+.main-div {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  justify-content: space-between;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+svg {
+  height: 2rem;
+  width: 2rem;
+  margin-right: 5px;
+  margin-left: 5px;
+}

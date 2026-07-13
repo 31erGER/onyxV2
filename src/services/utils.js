@@ -13,7 +13,7 @@ import {
   defaultWorkflows,
 } from "../constants/constants";
 
-import { aSuperSpecialAutoThemeSettingsId } from "../constants/themeIds";
+import { migrateLegacyConfig } from "./configMigration";
 
 // Language configuration
 export const SUPPORTED_LANGUAGES = ['en', 'fr', 'es', 'de', 'pl', 'binary', 'elvish'];
@@ -94,7 +94,6 @@ export function ReadConfigFromLocalStorage() {
   let config = JSON.parse(window.localStorage.getItem(localStorageKey));
   const defaultConfig = {
     temperatureControlValues: defaultTemperatureArray,
-    currentTheme: aSuperSpecialAutoThemeSettingsId,
     workflows: {
       items: defaultWorkflows,
       [WorkflowItemTypes.FAN_ON_GLOBAL]: defaultGlobalFanOnTimeInSeconds,
@@ -114,6 +113,9 @@ export function ReadConfigFromLocalStorage() {
       };
     }
   }
+
+  config = migrateLegacyConfig(config);
+  window.localStorage.setItem(localStorageKey, JSON.stringify(config));
 
   return config;
 }

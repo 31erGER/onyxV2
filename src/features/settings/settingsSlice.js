@@ -35,8 +35,13 @@ export const settingsSlice = createSlice({
     setAutoShutoffTime: (state, action) => {
       state.autoShutoffTime = action.payload;
     },
-    setCurrentTheme: (state, action) => {
-      state.config.currentTheme = action.payload;
+    setAppearanceMode: (state, action) => {
+      state.config.appearanceMode = action.payload;
+      WriteNewConfigToLocalStorage(state.config);
+    },
+    setAccentColors: (state, action) => {
+      state.config.accentColors = action.payload;
+      WriteNewConfigToLocalStorage(state.config);
     },
     setCurrentWorkflows: (state, action) => {
       state.config.workflows.items = action.payload;
@@ -80,7 +85,8 @@ export const {
   setIsDisplayOnCooling,
   setLEDbrightness,
   setAutoShutoffTime,
-  setCurrentTheme,
+  setAppearanceMode,
+  setAccentColors,
   setCurrentWorkflows,
   setFanOnGlobal,
   setHighlightLastRunWorkflow,

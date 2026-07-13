@@ -51,7 +51,7 @@ The accent gradient replaces all previous single accent colors: primary buttons,
 
 - New fields in the existing localStorage config object (`projectOnyxVapeApp` key, `settingsSlice`):
   - `appearanceMode: 'auto' | 'light' | 'dark'` (default `'auto'`)
-  - `accentColors: { start: string, end: string }` (default: target-design orange→pink, ≈ `#f5a97f` → `#ee7d95`)
+  - `accentColors: { start: string, end: string }` (default: target-design orange→pink, `#f5a97f` → `#ee7d95`)
 - `'auto'` uses a `matchMedia('(prefers-color-scheme: dark)')` listener; mode switches live with the OS.
 - `App.jsx` computes the theme via `useMemo(() => createNeumorphicTheme(resolvedMode, start, end), [...])` and passes it to the styled-components `ThemeProvider` as today.
 - `<meta name="theme-color">` is updated dynamically to the current surface color so the installed PWA status bar matches the mode.
@@ -67,7 +67,7 @@ The accent gradient replaces all previous single accent colors: primary buttons,
 
 ### Temperature screen (`/Volcano/App`)
 
-- **Circular dial** (SVG): gradient-stroked ring showing the **target temperature's** position within the valid range (40–230 °C), with a dot handle at the arc end. Center: current temperature large in modern sans; target temperature small below. `isF` respected via existing conversion utils.
+- **Circular dial** (SVG): gradient-stroked ring showing the **target temperature's** position within the valid range (`MIN_CELSIUS_TEMP`–`MAX_CELSIUS_TEMP` from `src/constants/temperature.js`), with a dot handle at the arc end. Center: current temperature large in modern sans; target temperature small below. `isF` respected via existing conversion utils.
 - **Interaction:** dragging on the ring sets target temperature (Pointer Events, touch + mouse). While dragging only local state updates; the BLE write happens on release (debounced) to avoid flooding the connection. Neumorphic **+/− buttons** below the dial for fine adjustment remain.
 - Ring pulses subtly while heating.
 - **Top row:** round neumorphic icon buttons per the mockup — Heat and Fan as toggle circles (active = gradient fill), plus workflow quick-starts.
@@ -76,7 +76,7 @@ The accent gradient replaces all previous single accent colors: primary buttons,
 
 ### Navigation
 
-Bootstrap navbar replaced by a **floating neumorphic bottom bar**: round icon buttons (connection / home / workflow editor / settings), active tab raised with gradient icon. Desktop: centered at bottom with max width.
+Bootstrap navbar replaced by a **floating neumorphic bottom bar** keeping all existing destinations: disconnect/connection, home (temperature), workflow editor, settings, contact. Active tab raised with gradient icon. Desktop: centered at bottom with max width.
 
 ### Settings (`/Volcano/Settings`)
 

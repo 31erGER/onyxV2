@@ -1,78 +1,34 @@
-import styled, { css } from "styled-components";
-
-const glowStyles = css`
-  ${({ theme }) => {
-    return css`
-      box-shadow: 0 0 6px ${theme.primaryFontColor},
-        0 0 12px ${theme.primaryFontColor};
-    `;
-  }}
-`;
+import styled from "styled-components";
 
 export const InactiveButton = styled.button`
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   min-height: 2.75rem;
   flex-grow: 1;
-  border-width: 0.15rem;
-  background: linear-gradient(
-    145deg,
-    ${(props) => props.theme.buttonColorMain},
-    ${(props) => props.theme.buttonColorMain}cc
-  );
-  color: ${(props) => props.theme.primaryFontColor};
-  border-radius: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusPill};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  box-shadow: ${(props) => props.theme.neumorphic.raisedSmall};
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  touch-action: manipulation;
 
   &:active {
+    box-shadow: ${(props) => props.theme.neumorphic.pressed};
     transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.2);
-    background-color: ${(props) => props.theme.buttonActive.backgroundColor};
-    color: ${(props) => props.theme.buttonActive.color};
   }
 `;
+
 export const GlowyInactiveButton = styled(InactiveButton)`
-  ${glowStyles}
+  box-shadow: ${(props) => props.theme.neumorphic.raisedSmall},
+    0 0 10px ${(props) => props.theme.neumorphic.accent.start};
 `;
+
 export const ActiveButton = styled(InactiveButton)`
-  background-color: ${(props) => props.theme.buttonActive.backgroundColor};
-  color: ${(props) => props.theme.buttonActive.color};
-  border-color: ${(props) => props.theme.buttonActive.borderColor};
+  background: ${(props) => props.theme.neumorphic.accent.gradient};
+  color: ${(props) => props.theme.neumorphic.accent.onAccent};
 `;
 
-export const PlusMinusButton = styled(InactiveButton)`
-  background: linear-gradient(
-    145deg,
-    ${(props) => props.theme.plusMinusButtons.backgroundColor},
-    ${(props) => props.theme.plusMinusButtons.backgroundColor}cc
-  );
-  color: ${(props) => props.theme.plusMinusButtons.color};
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  &:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.2);
-    background-color: ${(props) => props.theme.buttonActive.backgroundColor};
-    color: ${(props) => props.theme.buttonActive.color};
-  }
-`;
+export const PlusMinusButton = styled(InactiveButton)``;
 
 export const Div = styled.div`
   display: flex;

@@ -4,20 +4,20 @@ import PrideText from '../../themes/PrideText';
 import CopyButton from './CopyButton';
 
 const Card = styled.div`
-  background: ${props => props.theme.settingsSectionBg || 'rgba(255, 255, 255, 0.02)'};
-  border: 1px solid ${props => props.theme.borderColor || 'rgba(255, 255, 255, 0.1)'};
-  border-radius: 12px;
+  background: ${props => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${props => props.theme.neumorphic.radiusCard};
+  box-shadow: ${props => props.theme.neumorphic.raised};
   padding: 16px;
   transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
-  
+
   @media (min-width: 768px) {
     padding: 20px;
-    
+
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
   }
 `;
@@ -68,12 +68,13 @@ const ValueContainer = styled.div`
 const Value = styled.div`
   font-size: 1rem;
   font-weight: 500;
-  color: ${props => props.theme.primaryColor || props.theme.primaryFontColor};
+  color: ${props => props.theme.neumorphic.text};
   font-family: 'Courier New', monospace;
-  background: ${props => props.theme.buttonColorMain || 'rgba(255, 255, 255, 0.05)'};
+  background: ${props => props.theme.neumorphic.surface};
   padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: none;
+  box-shadow: ${props => props.theme.neumorphic.pressed};
   word-break: break-all;
   flex: 1;
   min-width: 0;
@@ -88,8 +89,7 @@ const Value = styled.div`
 const Description = styled.p`
   margin: 8px 0 0 0;
   font-size: 0.8rem;
-  opacity: 0.7;
-  color: ${props => props.theme.secondaryFontColor || props.theme.primaryFontColor};
+  color: ${props => props.theme.neumorphic.textSecondary};
   line-height: 1.3;
 
   @media (min-width: 768px) {

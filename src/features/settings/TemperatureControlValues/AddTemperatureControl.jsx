@@ -1,5 +1,5 @@
 import Form from "react-bootstrap/Form";
-import Button from "../../shared/styledComponents/Button";
+import NeuButton from "../../shared/neumorphic/NeuButton";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import {
@@ -78,7 +78,7 @@ export default function AddTemperatureControl() {
         />
         <Form.Text>{inputHelperText}</Form.Text>
       </Form.Group>
-      <Button type="submit">{t('settings.temperatureControl.submit')}</Button> <RestoreDefaultTemperature />
+      <NeuButton $primary type="submit">{t('settings.temperatureControl.submit')}</NeuButton> <RestoreDefaultTemperature />
     </Form>
   );
 }

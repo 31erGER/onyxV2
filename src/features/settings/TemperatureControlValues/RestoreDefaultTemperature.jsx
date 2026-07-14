@@ -5,7 +5,7 @@ import { setTemperatureControls } from "../settingsSlice";
 import { defaultTemperatureArray } from "../../../constants/constants";
 import { useState } from "react";
 import ModalWrapper from "../../shared/styledComponents/Modal";
-import Button from "../../shared/styledComponents/Button";
+import NeuButton from "../../shared/neumorphic/NeuButton";
 
 export default function RestoreDefaultTemperature() {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export default function RestoreDefaultTemperature() {
   };
   return (
     <>
-      <Button onClick={handleShow}>{t("settings.temperatureControl.restoreDefaults")}</Button>
+      <NeuButton $danger onClick={handleShow}>{t("settings.temperatureControl.restoreDefaults")}</NeuButton>
       <ModalWrapper
         headerText={t("settings.temperatureControl.restoreDefaultTemperatures")}
         bodyText={t("settings.temperatureControl.restoreDefaultsConfirm")}

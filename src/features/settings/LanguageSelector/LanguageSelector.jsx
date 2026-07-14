@@ -9,9 +9,11 @@ import { SUPPORTED_LANGUAGES } from "../../../services/utils";
 
 const StyledSelect = styled(Select)`
   max-width: 250px;
-  color: ${(props) => props.theme.primaryFontColor};
-  background-color: ${(props) => props.theme.backgroundColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
+  border-radius: 12px;
 `;
 
 export default function LanguageSelector() {

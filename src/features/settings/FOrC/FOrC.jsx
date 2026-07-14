@@ -1,5 +1,5 @@
 import SettingsItem from "../SettingsItem";
-import Button from "../../shared/styledComponents/Button";
+import NeuButton from "../../shared/neumorphic/NeuButton";
 import PrideText from "../../../themes/PrideText";
 import { useTranslation } from "react-i18next";
 
@@ -13,9 +13,9 @@ export default function FOrC(props) {
       title={t('settings.items.temperatureScale.title')}
       description={t('settings.items.temperatureScale.description', { current: currentScale })}
     >
-      <Button onClick={props.onClick}>
+      <NeuButton onClick={props.onClick}>
         <PrideText text={t('settings.items.temperatureScale.changeTo', { scale: props.temperatureScaleAbbreviation })} />
-      </Button>
+      </NeuButton>
     </SettingsItem>
   );
 }

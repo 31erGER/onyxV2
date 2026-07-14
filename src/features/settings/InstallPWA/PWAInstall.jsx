@@ -1,46 +1,8 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import Div from "../Shared/StyledComponents/Div";
 import PrideText from "../../../themes/PrideText";
-
-const InstallButton = styled.button`
-  font-size: 1.25rem;
-  min-height: 2.75rem;
-  background: linear-gradient(
-    135deg,
-    ${(props) => props.theme.buttonColorMain},
-    ${(props) => props.theme.buttonColorMain}
-  );
-  color: ${(props) => props.theme.primaryFontColor};
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 2rem;
-  padding: 0.5rem 1.5rem;
-  cursor: pointer;
-  width: auto;
-  margin: 0px 2.5px 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
-  font-weight: 500;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  &:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
+import NeuButton from "../../shared/neumorphic/NeuButton";
 
 const PWAInstall = () => {
   const { t } = useTranslation();
@@ -112,9 +74,9 @@ const PWAInstall = () => {
       <div
         style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}
       >
-        <InstallButton onClick={handleInstallClick}>
+        <NeuButton $primary onClick={handleInstallClick}>
           {t("settings.system.installApp")}
-        </InstallButton>
+        </NeuButton>
       </div>
     </Div>
   );

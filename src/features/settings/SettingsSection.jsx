@@ -3,11 +3,12 @@ import styled, { useTheme } from 'styled-components';
 import PrideText from '../../themes/PrideText';
 
 const SectionContainer = styled.div`
-  margin-bottom: 30px;
-  border: 1px solid ${props => props.theme.borderColor || 'rgba(255, 255, 255, 0.1)'};
-  border-radius: 12px;
-  padding: 16px;
-  background: ${props => props.theme.settingsSectionBg || 'rgba(255, 255, 255, 0.02)'};
+  background: ${(p) => p.theme.neumorphic.surface};
+  border-radius: ${(p) => p.theme.neumorphic.radiusCard};
+  box-shadow: ${(p) => p.theme.neumorphic.raised};
+  border: none;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
   transition: all 0.3s ease;
 `;
 
@@ -16,7 +17,8 @@ const SectionHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 1rem 1.25rem;
+  color: ${(p) => p.theme.neumorphic.text};
   user-select: none;
 
   &:hover {
@@ -50,7 +52,8 @@ const ExpandIcon = styled.div`
 `;
 
 const SectionContent = styled.div`
-  margin-top: ${props => props.isExpanded ? '20px' : '0'};
+  padding: ${props => props.isExpanded ? '1.25rem' : '0 1.25rem'};
+  border-top: ${props => props.isExpanded ? `1px solid ${props.theme.neumorphic.shadowDark}` : 'none'};
   max-height: ${props => props.isExpanded ? '2000px' : '0'};
   overflow: hidden;
   transition: all 0.3s ease;
@@ -58,8 +61,7 @@ const SectionContent = styled.div`
 `;
 
 const SectionDescription = styled.p`
-  color: ${props => props.theme.secondaryFontColor || props.theme.primaryFontColor};
-  opacity: 0.8;
+  color: ${props => props.theme.neumorphic.textSecondary};
   margin: 0 0 20px 0;
   font-size: 0.9rem;
   line-height: 1.4;

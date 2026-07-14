@@ -1,226 +1,138 @@
-import styled from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { useState } from "react";
+import PropTypes from "prop-types";
 import PrideText from "../../themes/PrideText";
 import { useTranslation } from "react-i18next";
-import { DEGREE_SYMBOL } from "../../constants/temperature";
+import NeuCard from "../shared/neumorphic/NeuCard";
+import NeuIconButton from "../shared/neumorphic/NeuIconButton";
 
-const Container = styled.div`
-  min-height: 100vh;
-  width: 100vw;
-  background-color: ${(props) => props.theme.backgroundColor};
+const ConnectWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  box-sizing: border-box;
-
-  @media (min-width: 768px) {
-    padding: 40px;
-  }
-`;
-
-const MainContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 32px;
-  max-width: 800px;
-  margin: 0 auto;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-grow: 1;
   width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 2rem 1rem;
 `;
 
-const LargeConnectButton = styled.button`
-  background: ${(props) =>
-    props.theme.settingsSectionBg || "rgba(255, 255, 255, 0.02)"};
-  border: 2px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 20px;
-  padding: 60px 48px;
-  color: ${(props) => props.theme.primaryFontColor};
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: 60vh;
-  width: 98%;
-  max-width: 1000px;
+const AppTitle = styled.h1`
+  margin: 0;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: ${(p) => p.theme.neumorphic.text};
+`;
 
-  &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-    border-color: ${(props) =>
-      props.theme.buttonActive?.borderColor || props.theme.primaryColor};
-  }
+const connectPulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+`;
+
+const ConnectButton = styled.button`
+  width: 11rem;
+  height: 11rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: ${(p) => p.theme.neumorphic.accent.gradient};
+  color: ${(p) => p.theme.neumorphic.accent.onAccent};
+  box-shadow: ${(p) => p.theme.neumorphic.raised};
+  transition: transform 0.15s ease;
 
   &:active {
-    transform: translateY(-3px);
+    transform: scale(0.97);
+    box-shadow: ${(p) => p.theme.neumorphic.pressed};
   }
 
-  @media (max-width: 768px) {
-    padding: 48px 36px;
-    min-height: 50vh;
-    width: 96%;
-    gap: 20px;
-  }
+  ${(p) =>
+    p.$connecting &&
+    css`
+      animation: ${connectPulse} 1.8s ease-in-out infinite;
+    `}
 `;
 
-const ConnectTitle = styled.h1`
-  margin: 0;
-  font-size: 3rem;
-  font-weight: 700;
-
-  @media (max-width: 768px) {
-    font-size: 2.2rem;
-  }
+const ConnectIcon = styled.span`
+  font-size: 3.25rem;
+  line-height: 1;
 `;
 
 const ConnectDescription = styled.p`
   margin: 0;
-  font-size: 1.3rem;
+  max-width: 30rem;
+  text-align: center;
+  font-size: 1.05rem;
   line-height: 1.6;
-  opacity: 0.8;
-  max-width: 500px;
-
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
-  }
+  color: ${(p) => p.theme.neumorphic.textSecondary};
 `;
 
 const ConnectInstruction = styled.div`
-  font-size: 1.1rem;
-  opacity: 0.7;
-  margin-top: 8px;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
+  text-align: center;
+  font-size: 0.95rem;
+  color: ${(p) => p.theme.neumorphic.textSecondary};
 `;
 
-const ProTipCard = styled.div`
-  background: ${(props) =>
-    props.theme.settingsSectionBg || "rgba(255, 255, 255, 0.02)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 12px;
-  padding: 20px;
+const TipCard = styled(NeuCard)`
   width: 100%;
-  max-width: 500px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  @media (max-width: 768px) {
-    width: 96%;
-    max-width: none;
-  }
+  max-width: 32rem;
+  box-sizing: border-box;
 `;
 
-const ProTipHeader = styled.div`
+const TipHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 `;
 
-const ProTipLeft = styled.div`
+const TipLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 `;
 
-const ProTipIcon = styled.span`
-  font-size: 1.5rem;
-  opacity: 0.8;
+const TipIcon = styled.span`
+  font-size: 1.4rem;
 `;
 
-const ProTipTitle = styled.h3`
+const TipTitle = styled.h3`
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: ${(props) => props.theme.primaryColor || props.theme.primaryFontColor};
+  color: ${(p) => p.theme.neumorphic.text};
 `;
 
-const ProTipNavigation = styled.div`
+const TipNav = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-`;
-
-const NavButton = styled.button`
-  background: ${(props) =>
-    props.theme.buttonColorMain || "rgba(255, 255, 255, 0.1)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.2)"};
-  border-radius: 6px;
-  padding: 6px 8px;
-  color: ${(props) => props.theme.primaryFontColor};
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: ${(props) =>
-      props.theme.buttonActive?.backgroundColor || props.theme.primaryColor};
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-
-    &:hover {
-      transform: none;
-      background: ${(props) =>
-        props.theme.buttonColorMain || "rgba(255, 255, 255, 0.1)"};
-    }
-  }
+  gap: 0.5rem;
 `;
 
 const TipCounter = styled.span`
-  font-size: 0.8rem;
-  opacity: 0.6;
-  min-width: 40px;
+  min-width: 2.5rem;
   text-align: center;
+  font-size: 0.8rem;
+  color: ${(p) => p.theme.neumorphic.textSecondary};
 `;
 
-const ProTipContent = styled.div`
-  font-size: 1rem;
-  line-height: 1.5;
-  color: ${(props) => props.theme.primaryFontColor};
-  background: ${(props) =>
-    props.theme.buttonColorMain || "rgba(255, 255, 255, 0.05)"};
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 120px;
+const TipContent = styled(NeuCard)`
+  min-height: 6rem;
   display: flex;
   align-items: center;
-
-  @media (max-width: 768px) {
-    min-height: 100px;
-  }
+  font-size: 1rem;
+  line-height: 1.5;
+  color: ${(p) => p.theme.neumorphic.text};
 `;
 
 export default function Ble(props) {
   const { t } = useTranslation();
-  
+
   const tips = [
     t("tips.spacebar"),
     t("tips.brightness"),
@@ -246,6 +158,8 @@ export default function Ble(props) {
     Math.floor(Math.random() * tips.length)
   );
 
+  const [connecting, setConnecting] = useState(false);
+
   const nextTip = () => {
     setCurrentTipIndex((prev) => (prev + 1) % tips.length);
   };
@@ -254,42 +168,73 @@ export default function Ble(props) {
     setCurrentTipIndex((prev) => (prev - 1 + tips.length) % tips.length);
   };
 
-  return (
-    <Container>
-      <MainContent>
-        <LargeConnectButton onClick={props.onClick}>
-          <ConnectTitle>
-            <PrideText text={`🔗  ${t("connectTitle")}`} />
-          </ConnectTitle>
-          <ConnectDescription>{t("connectDescription")}</ConnectDescription>
-          <ConnectInstruction>{t("connectInstruction")}</ConnectInstruction>
-        </LargeConnectButton>
+  const handleConnect = async () => {
+    if (connecting) {
+      return;
+    }
+    setConnecting(true);
+    try {
+      await props.onClick();
+    } finally {
+      setConnecting(false);
+    }
+  };
 
-        <ProTipCard>
-          <ProTipHeader>
-            <ProTipLeft>
-              <ProTipIcon>💡</ProTipIcon>
-              <ProTipTitle>
-                <PrideText text={t("proTipLabel")} />
-              </ProTipTitle>
-            </ProTipLeft>
-            <ProTipNavigation>
-              <NavButton onClick={prevTip} title={t("proTipPrevious")}>
-                ←
-              </NavButton>
-              <TipCounter>
-                {currentTipIndex + 1}/{tips.length}
-              </TipCounter>
-              <NavButton onClick={nextTip} title={t("proTipNext")}>
-                →
-              </NavButton>
-            </ProTipNavigation>
-          </ProTipHeader>
-          <ProTipContent>
-            <PrideText text={tips[currentTipIndex]} />
-          </ProTipContent>
-        </ProTipCard>
-      </MainContent>
-    </Container>
+  return (
+    <ConnectWrapper>
+      <AppTitle>
+        <PrideText text={t("connectTitle")} />
+      </AppTitle>
+
+      <ConnectButton
+        type="button"
+        onClick={handleConnect}
+        $connecting={connecting}
+      >
+        <ConnectIcon>🔗</ConnectIcon>
+      </ConnectButton>
+
+      <ConnectDescription>{t("connectDescription")}</ConnectDescription>
+      <ConnectInstruction>{t("connectInstruction")}</ConnectInstruction>
+
+      <TipCard>
+        <TipHeader>
+          <TipLeft>
+            <TipIcon>💡</TipIcon>
+            <TipTitle>
+              <PrideText text={t("proTipLabel")} />
+            </TipTitle>
+          </TipLeft>
+          <TipNav>
+            <NeuIconButton
+              type="button"
+              $size="2.75rem"
+              onClick={prevTip}
+              title={t("proTipPrevious")}
+            >
+              ←
+            </NeuIconButton>
+            <TipCounter>
+              {currentTipIndex + 1}/{tips.length}
+            </TipCounter>
+            <NeuIconButton
+              type="button"
+              $size="2.75rem"
+              onClick={nextTip}
+              title={t("proTipNext")}
+            >
+              →
+            </NeuIconButton>
+          </TipNav>
+        </TipHeader>
+        <TipContent $inset>
+          <PrideText text={tips[currentTipIndex]} />
+        </TipContent>
+      </TipCard>
+    </ConnectWrapper>
   );
 }
+
+Ble.propTypes = {
+  onClick: PropTypes.func.isRequired,
+};

@@ -1,4 +1,17 @@
 {
+  "appearance": {
+    "title": "Appearance",
+    "mode": "Mode",
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto",
+    "accentColors": "Accent colors",
+    "startColor": "Start color",
+    "endColor": "End color",
+    "presets": "Presets",
+    "reset": "Reset colors",
+    "preview": "Preview"
+  },
   "connectTitle": "01000011 01101111 01101110 01101110 01100101 01100011 01110100",
   "connectDescription": "01010010 01100101 01100001 01100100 01111001 00111111",
   "connectInstruction": "01010000 01101111 01110111 01100101 01110010 00100000 01001111 01001110",

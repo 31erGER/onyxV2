@@ -1,4 +1,17 @@
 {
+  "appearance": {
+    "title": "Appearance",
+    "mode": "Mode",
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto",
+    "accentColors": "Accent colors",
+    "startColor": "Start color",
+    "endColor": "End color",
+    "presets": "Presets",
+    "reset": "Reset colors",
+    "preview": "Preview"
+  },
   "connectTitle": "Połącz z Volcano",
   "connectDescription": "Gotowy do przejęcia kontroli nad swoim Volcano Hybrid? Dotknij tutaj, aby nawiązać połączenie Bluetooth i odblokować wszystkie zaawansowane funkcje.",
   "connectInstruction": "Upewnij się, że Twoje Volcano jest włączone i w pobliżu",

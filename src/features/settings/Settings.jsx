@@ -7,7 +7,7 @@ import DisplayOnCoolingToggleContainer from "./DisplayOnCoolingToggle/DisplayOnC
 import TemperatureControlSettings from "./TemperatureControlValues/TemperatureControlSettingsContainer";
 import VibrationToggleContainer from "./VibrationToggle/VibrationToggleContainer";
 import Div from "../shared/styledComponents/RootNonAppOutletDiv";
-import ThemesContainer from "./Theming/ThemesContainer";
+import AppearanceSettings from "./Appearance/AppearanceSettings";
 import PrideText from "../../themes/PrideText";
 import TurnHeatOnWhenConnectionIsEstablished from "./TurnHeatOnWhenConnectionIsEstablished/TurnHeatOnWhenConnectionIsEstablished";
 import HighlightLastRunWorkflow from "./HighlightLastRunWorkflow/HighlightLastRunWorkflow";
@@ -33,7 +33,7 @@ export default function Settings() {
         description={t("settings.appearance.description")}
         defaultExpanded={true}
       >
-        <ThemesContainer />
+        <AppearanceSettings />
       </SettingsSection>
 
       <SettingsSection

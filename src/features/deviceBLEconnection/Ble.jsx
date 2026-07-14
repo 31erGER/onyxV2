@@ -188,6 +188,7 @@ export default function Ble(props) {
 
       <ConnectButton
         type="button"
+        aria-label={t("connectTitle")}
         onClick={handleConnect}
         $connecting={connecting}
       >

@@ -9,11 +9,15 @@ import { SUPPORTED_LANGUAGES } from "../../../services/utils";
 
 const StyledSelect = styled(Select)`
   max-width: 250px;
-  background: ${(props) => props.theme.neumorphic.surface};
+  background-color: ${(props) => props.theme.neumorphic.surface};
   color: ${(props) => props.theme.neumorphic.text};
   border: none;
   box-shadow: ${(props) => props.theme.neumorphic.pressed};
   border-radius: 12px;
+  background-image: ${(p) =>
+    `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='${encodeURIComponent(
+      p.theme.neumorphic.text
+    )}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E")`};
 `;
 
 export default function LanguageSelector() {

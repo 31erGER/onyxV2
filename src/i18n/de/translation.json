@@ -9,6 +9,14 @@
     "startColor": "Startfarbe",
     "endColor": "Endfarbe",
     "presets": "Vorlagen",
+    "presetNames": {
+      "sunset": "Sonnenuntergang",
+      "ocean": "Ozean",
+      "lime": "Limette",
+      "lavender": "Lavendel",
+      "ember": "Glut",
+      "mono": "Mono"
+    },
     "reset": "Farben zurücksetzen",
     "preview": "Vorschau"
   },

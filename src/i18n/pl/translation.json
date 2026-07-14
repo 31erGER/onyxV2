@@ -9,6 +9,14 @@
     "startColor": "Start color",
     "endColor": "End color",
     "presets": "Presets",
+    "presetNames": {
+      "sunset": "Sunset",
+      "ocean": "Ocean",
+      "lime": "Lime",
+      "lavender": "Lavender",
+      "ember": "Ember",
+      "mono": "Mono"
+    },
     "reset": "Reset colors",
     "preview": "Preview"
   },

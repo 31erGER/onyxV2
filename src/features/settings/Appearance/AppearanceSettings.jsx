@@ -139,7 +139,7 @@ export default function AppearanceSettings() {
             key={preset.id}
             $start={preset.start}
             $end={preset.end}
-            aria-label={preset.id}
+            aria-label={t(`appearance.presetNames.${preset.id}`)}
             onClick={() =>
               dispatch(
                 setAccentColors({ start: preset.start, end: preset.end })

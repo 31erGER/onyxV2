@@ -31,7 +31,7 @@ export default function CreateWorkflowButton(props) {
   };
 
   return (
-    <StyledButton onClick={createWorkflow}>
+    <StyledButton $primary onClick={createWorkflow}>
       <PrideText text={t("workflowButtons.createNewWorkflow")} />
     </StyledButton>
   );

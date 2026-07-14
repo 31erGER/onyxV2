@@ -31,7 +31,7 @@ export default function DeleteWorkflowButton(props) {
 
   return (
     <>
-      <Button onClick={handleShow}>
+      <Button $danger onClick={handleShow}>
         <PrideText text="Delete Workflow" />
       </Button>
       <ModalWrapper

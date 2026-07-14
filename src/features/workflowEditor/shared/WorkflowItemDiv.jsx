@@ -3,15 +3,16 @@ import styled from "styled-components";
 const Div = styled.div`
   display: flex;
   flex-direction: column;
-  border: 2px solid ${(props) => props.theme.borderColor};
-  border-radius: 12px;
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
   padding: 20px;
   flex-grow: 1;
-  background: ${(props) => props.theme.buttonColorMain || 'rgba(255, 255, 255, 0.05)'};
-  transition: all 0.3s ease;
+  background: ${(props) => props.theme.neumorphic.surface};
+  box-shadow: ${(props) => props.theme.neumorphic.raised};
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -19,26 +20,21 @@ const Div = styled.div`
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, 
-      ${(props) => props.theme.primaryColor || props.theme.borderColor} 0%, 
-      ${(props) => props.theme.iconColor || props.theme.borderColor} 100%
-    );
+    background: ${(props) => props.theme.neumorphic.accent.gradient};
     opacity: 0.6;
   }
-  
+
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: ${(props) => props.theme.primaryColor || props.theme.borderColor};
-    
+
     &::before {
       opacity: 1;
     }
   }
-  
+
   &:focus-within {
-    border-color: ${(props) => props.theme.buttonActive.borderColor};
-    box-shadow: 0 0 0 3px ${(props) => props.theme.buttonActive.borderColor}33;
+    box-shadow: ${(props) => props.theme.neumorphic.raised},
+      0 0 0 2px ${(props) => props.theme.neumorphic.accent.tint};
   }
 `;
 

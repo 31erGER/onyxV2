@@ -3,38 +3,41 @@ import Modal from "react-bootstrap/Modal";
 import styled from "styled-components";
 
 const StyledModalBody = styled(Modal.Body)`
-  background-color: ${(props) => props.theme.backgroundColor};
-  color: ${(props) => props.theme.primaryFontColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
 `;
 
 const StyledModalHeader = styled(Modal.Header)`
-  background-color: ${(props) => props.theme.backgroundColor};
-  color: ${(props) => props.theme.primaryFontColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
 `;
 
 const StyledModalTitle = styled(Modal.Title)`
-  background-color: ${(props) => props.theme.backgroundColor};
-  color: ${(props) => props.theme.primaryFontColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
 `;
 
 const StyledModalFooter = styled(Modal.Footer)`
-  background-color: ${(props) => props.theme.backgroundColor};
-  color: ${(props) => props.theme.primaryFontColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
 `;
 
 const StyledModal = styled(Modal)`
   .modal-content {
-    border: 2px solid ${(props) => props.theme.borderColor};
-    border-radius: 12px;
+    background: ${(props) => props.theme.neumorphic.surface};
+    color: ${(props) => props.theme.neumorphic.text};
+    border: none;
+    border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+    box-shadow: ${(props) => props.theme.neumorphic.raised};
   }
 `;
 
 const StyledModalButtons = styled(Button)`
-  color: ${(props) => props.theme.primaryFontColor};
+  color: ${(props) => props.theme.neumorphic.text};
 `;
 
 export default function ModalWrapper(props) {

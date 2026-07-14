@@ -19,10 +19,10 @@ import CreatePremadeWorkflowButtonContainer from "./CreatePremadeWorkflowButtonC
 import { useTranslation } from "react-i18next";
 
 const StyledAccordionBody = styled(Accordion.Body)`
-  background-color: ${(props) => props.theme.backgroundColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
+  color: ${(props) => props.theme.neumorphic.text};
   padding: 20px;
-  border-radius: 0 0 12px 12px;
-  margin-top: 4px;
   overflow: hidden;
 `;
 
@@ -36,47 +36,33 @@ const WorkflowDiv = styled.div`
 
 const StyledAccordionHeader = styled(Accordion.Header)`
   .accordion-button {
-    background-color: ${(props) => props.theme.backgroundColor};
-    color: ${(props) => props.theme.primaryFontColor};
+    background: ${(props) => props.theme.neumorphic.surface};
+    color: ${(props) => props.theme.neumorphic.text};
     border: none;
-    border-radius: 12px 12px 0 0;
+    border-radius: 0;
     padding: 16px 20px;
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .accordion-button.collapsed {
-    border-radius: 12px;
-  }
-
-    &:hover {
-      background-color: ${(props) => props.theme.buttonColorMain};
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
+    box-shadow: none;
+    transition: background 0.3s ease, color 0.3s ease;
 
     &:focus {
-      border-color: ${(props) => props.theme.buttonActive.borderColor};
-      box-shadow: 0 0 0 3px ${(props) =>
-        props.theme.buttonActive.borderColor}33;
+      box-shadow: none;
     }
   }
 
   .accordion-button:not(.collapsed) {
-    color: ${(props) => props.theme.buttonActive.color};
-    background-color: ${(props) =>
-      props.theme.workflowEditor.accordionExpandedColor};
-    border-color: ${(props) => props.theme.buttonActive.borderColor};
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: ${(props) => props.theme.workflowEditor.accordionExpandedColor};
+    color: ${(props) => props.theme.neumorphic.text};
+    box-shadow: none;
   }
 
   .accordion-button:not(.collapsed)::after {
     background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='${(
       props
     ) =>
-      props.theme.backgroundColor.replace(
+      props.theme.neumorphic.text.replace(
         "#",
         "%23"
       )}'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
@@ -88,7 +74,7 @@ const StyledAccordionHeader = styled(Accordion.Header)`
     background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='${(
       props
     ) =>
-      props.theme.iconColor.replace(
+      props.theme.neumorphic.text.replace(
         "#",
         "%23"
       )}'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
@@ -102,18 +88,16 @@ const WorkflowButtonsDiv = styled.div`
   gap: 12px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid ${(props) => props.theme.borderColor};
+  border-top: 1px solid ${(props) => props.theme.neumorphic.shadowDark};
 `;
 
 const ConfigEditorSection = styled.div`
-  background: ${(props) =>
-    props.theme.settingsSectionBg || "rgba(255, 255, 255, 0.02)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 12px;
+  background: ${(props) => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
   padding: 24px;
   margin: 30px 0;
-  transition: all 0.3s ease;
 `;
 
 const ConfigEditorHeader = styled.div`
@@ -144,13 +128,12 @@ const ConfigButtonsContainer = styled.div`
 `;
 
 const ConfigCard = styled.div`
-  background: ${(props) =>
-    props.theme.buttonColorMain || "rgba(255, 255, 255, 0.05)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 8px;
+  background: ${(props) => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  box-shadow: ${(props) => props.theme.neumorphic.raised};
   padding: 20px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -158,7 +141,6 @@ const ConfigCard = styled.div`
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -190,14 +172,12 @@ const ConfigCardDescription = styled.p`
 `;
 
 const WorkflowCreationSection = styled.div`
-  background: ${(props) =>
-    props.theme.settingsSectionBg || "rgba(255, 255, 255, 0.02)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 12px;
+  background: ${(props) => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
   padding: 24px;
   margin: 30px 0;
-  transition: all 0.3s ease;
 `;
 
 const WorkflowCreationHeader = styled.div`
@@ -228,13 +208,12 @@ const WorkflowCreationButtonsContainer = styled.div`
 `;
 
 const WorkflowCreationCard = styled.div`
-  background: ${(props) =>
-    props.theme.buttonColorMain || "rgba(255, 255, 255, 0.05)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 8px;
+  background: ${(props) => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  box-shadow: ${(props) => props.theme.neumorphic.raised};
   padding: 20px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -244,7 +223,6 @@ const WorkflowCreationCard = styled.div`
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 
   &:first-child {
@@ -280,19 +258,13 @@ const WorkflowCreationCardDescription = styled.p`
 `;
 
 const AccordionItemWrapper = styled(Accordion.Item)`
-  border: 1px solid ${(props) => props.theme.borderColor};
-  border-radius: 12px;
-  margin-bottom: 24px;
-  padding: 4px;
-  background: ${(props) => props.theme.backgroundColor};
-  color: ${(props) => props.theme.primaryFontColor};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  }
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  margin-bottom: 1rem;
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  box-shadow: ${(props) => props.theme.neumorphic.raised};
+  overflow: hidden;
 
   &:last-child {
     margin-bottom: 0;
@@ -303,11 +275,10 @@ const WorkflowHeaderContainer = styled.div`
   text-align: center;
   margin-bottom: 28px;
   padding: 20px;
-  background: ${(props) =>
-    props.theme.settingsSectionBg || "rgba(255, 255, 255, 0.02)"};
-  border: 1px solid
-    ${(props) => props.theme.borderColor || "rgba(255, 255, 255, 0.1)"};
-  border-radius: 16px;
+  background: ${(props) => props.theme.neumorphic.surface};
+  border: none;
+  border-radius: ${(props) => props.theme.neumorphic.radiusCard};
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
 
   h1 {
     margin-bottom: 16px;

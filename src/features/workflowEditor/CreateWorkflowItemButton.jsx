@@ -22,7 +22,7 @@ export default function CreateWorkflowItemButton(props) {
   };
 
   return (
-    <Button onClick={onClick}>
+    <Button $primary onClick={onClick}>
       <PrideText text="Add Action" />
     </Button>
   );

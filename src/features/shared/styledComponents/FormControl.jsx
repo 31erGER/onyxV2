@@ -2,19 +2,28 @@ import Control from "react-bootstrap/FormControl";
 import styled from "styled-components";
 
 const ControlWrapper = styled(Control)`
-  color: ${(props) => props.theme.primaryFontColor};
-  background-color: ${(props) => props.theme.backgroundColor};
-  border-color: ${(props) => props.theme.borderColor};
+  background: ${(props) => props.theme.neumorphic.surface};
+  color: ${(props) => props.theme.neumorphic.text};
+  border: none;
+  box-shadow: ${(props) => props.theme.neumorphic.pressed};
+  border-radius: 12px;
 
   &:focus {
-    background-color: ${(props) => props.theme.backgroundColor};
-    color: ${(props) => props.theme.primaryFontColor};
-    border-color: ${(props) => props.theme.borderColor};
+    background: ${(props) => props.theme.neumorphic.surface};
+    color: ${(props) => props.theme.neumorphic.text};
+    border: none;
+    box-shadow: ${(props) => props.theme.neumorphic.pressed},
+      0 0 0 2px ${(props) => props.theme.neumorphic.accent.tint};
   }
+
   &:disabled {
-    background-color: ${(props) => props.theme.backgroundColor};
-    color: ${(props) => props.theme.primaryFontColor};
-    border-color: ${(props) => props.theme.borderColor};
+    background: ${(props) => props.theme.neumorphic.surface};
+    color: ${(props) => props.theme.neumorphic.textSecondary};
+    box-shadow: ${(props) => props.theme.neumorphic.pressed};
+  }
+
+  &::placeholder {
+    color: ${(props) => props.theme.neumorphic.textSecondary};
   }
 `;
 

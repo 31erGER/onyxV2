@@ -531,7 +531,7 @@ export default function ConditionalHeatItemEditor({ workflowId, item }) {
         </div>
       ))}
 
-      <Button onClick={addCondition}>
+      <Button $primary onClick={addCondition}>
         <PrideText text={t('workflowEditor.conditionalHeat.addCondition')} />
       </Button>
 

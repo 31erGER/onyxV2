@@ -25,7 +25,6 @@
     "react-range": "^1.10.0",
     "react-redux": "^9.0.0",
     "react-router-dom": "^6.0.2",
-    "react-snowfall": "^2.2.0",
     "redux": "^5.0.0",
     "styled-components": "^5.3.3",
     "web-vitals": "^2.1.4"
@@ -39,10 +38,6 @@
     "test": "vitest run"
   },
   "overrides": {
-    "react-snowfall": {
-      "react": "$react",
-      "react-dom": "$react-dom"
-    },
     "react-dnd-scrolling": {
       "react": "$react",
       "react-dom": "$react-dom"

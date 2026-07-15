@@ -831,7 +831,7 @@ export default function CurrentWorkflowExecutionDisplay() {
                 <DetailValue>
                   <span
                     style={{
-                      fontFamily: "digital-mono, monospace",
+                      fontFamily: "monospace",
                       fontSize: "1.4rem",
                     }}
                   >
@@ -853,7 +853,7 @@ export default function CurrentWorkflowExecutionDisplay() {
                 <DetailValue>
                   <span
                     style={{
-                      fontFamily: "digital-mono, monospace",
+                      fontFamily: "monospace",
                       fontSize: "1.4rem",
                     }}
                   >
@@ -920,7 +920,7 @@ export default function CurrentWorkflowExecutionDisplay() {
                         }
 
                         // Use monospace font for all timer displays
-                        return "digital-mono, monospace";
+                        return "monospace";
                       })(),
                       fontSize: (() => {
                         // Use local elapsed time for smooth display

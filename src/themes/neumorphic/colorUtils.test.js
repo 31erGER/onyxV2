@@ -4,7 +4,6 @@ import {
   rgbToHex,
   mix,
   withAlpha,
-  relativeLuminance,
   contrastRatio,
   readableTextOn,
   ensureContrast,

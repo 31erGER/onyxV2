@@ -13,7 +13,7 @@ import {
   convertBLEtoUint16,
   convertToggleCharacteristicToBool,
 } from "../../../services/utils";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import store from "../../../store";
 import {
   setIsHeatOn,
@@ -68,18 +68,6 @@ export default function VolcanoLoader(props) {
     clearCache();
     navigate("/");
   };
-
-  /* eslint-disable no-unused-vars */
-  //little hack to make Pridetext reaminate when these states change
-  const currentTargetTemperature = useSelector(
-    (state) => state.deviceInteraction.targetTemperature
-  );
-
-  const currentTemperature = useSelector(
-    (state) => state.deviceInteraction.currentTemperature
-  );
-
-  /* eslint-enable no-unused-vars */
 
   useEffect(() => {
     const handlePrj1ChangedVolcano = (event) => {

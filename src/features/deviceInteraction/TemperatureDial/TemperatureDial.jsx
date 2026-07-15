@@ -175,7 +175,7 @@ export default function TemperatureDial({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+          onPointerCancel={() => setDragTemp(null)}
         />
 
         <CenterText

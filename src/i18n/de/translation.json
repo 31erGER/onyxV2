@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist-Modus",
+    "exit": "Minimalist-Modus verlassen"
+  },
   "appearance": {
     "title": "Erscheinungsbild",
     "mode": "Modus",
@@ -31,7 +35,7 @@
     "brightness": "Die Helligkeit des Bildschirms auf 0 zu setzen schaltet ihn aus",
     "clean": "Vergessen Sie nicht, Ihre Kräuterkammer zu reinigen :D",
     "filter": "Denken Sie daran, den Luftfilter Ihres Volcano zu überprüfen",
-    "themes": "Sie können das Aussehen der App ändern, indem Sie Designs in den Einstellungen ändern",
+    "themes": "In den Einstellungen kannst du zwischen Hell und Dunkel wechseln und eigene Akzentfarben wählen!",
     "workflows": "Verwenden Sie Arbeitsabläufe, um die vollständige Kontrolle über Ihren Volcano zu übernehmen",
     "temperatures": "Sie können Temperaturen in den Einstellungen hinzufügen oder entfernen",
     "bagReplace": "Häufige Nutzer sollten Beutel alle 2-4 Wochen für optimalen Geschmack ersetzen",
@@ -39,7 +43,6 @@
     "preheat": "Für beste Ergebnisse heizen Sie die Kammer 2-5 Sekunden vor dem Anbringen des Beutels vor",
     "dragDrop": "Drag & Drop kann verwendet werden, um Arbeitsabläufe und Arbeitsablaufelemente auf allen Geräten neu zu ordnen",
     "highlight": "Wenn Sie den letzten ausgeführten Arbeitsablauf visuell sehen möchten, können Sie die Hervorhebung des letzten ausgeführten Arbeitsablaufs in den Einstellungen aktivieren",
-    "autoSeasonal": "Das Auto-Saisonale Rotations-Design wählt ein festliches Design aus, wenn möglich, und greift auf ein halb-zufälliges Design zurück",
     "newCommands": "Neue Arbeitsablauf-Befehle jetzt verfügbar! Schleifen Sie Ihre Arbeitsabläufe und stellen Sie die Temperatur basierend auf der aktuellen Zieltemperatur ein!",
     "miniMode": "Mini-Modus jetzt verfügbar! Klicken Sie einfach auf \"Mini-Modus\" im Navigationsmenü!",
     "miniModeGrid": "Wenn Sie keine Arbeitsabläufe gespeichert haben, zeigt der Mini-Modus ein Temperaturraster an.",

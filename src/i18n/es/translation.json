@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist Mode",
+    "exit": "Exit Minimalist"
+  },
   "appearance": {
     "title": "Appearance",
     "mode": "Mode",
@@ -31,7 +35,7 @@
     "brightness": "Ajustar la pantalla a 0 de brillo la apaga completamente",
     "clean": "No olvides limpiar tu cámara de hierbas :D",
     "filter": "Recuerda revisar el filtro de aire de tu Volcano",
-    "themes": "Puedes cambiar el aspecto de la aplicación modificando los temas en la página de configuración",
+    "themes": "You can switch between light and dark mode and pick your own accent colors in the settings!",
     "workflows": "Usa los flujos de trabajo para tomar el control total de tu Volcano",
     "temperatures": "Puedes agregar o eliminar temperaturas en la página de configuración",
     "bagReplace": "Los usuarios frecuentes deberían reemplazar las bolsas cada 2-4 semanas para un sabor óptimo",
@@ -39,7 +43,6 @@
     "preheat": "Para mejores resultados, precalienta la cámara durante 2-5 segundos antes de conectar la bolsa",
     "dragDrop": "Arrastrar y soltar se puede usar para reordenar flujos de trabajo y elementos de flujo de trabajo en todos los dispositivos",
     "highlight": "Si quieres ver visualmente el último flujo de trabajo ejecutado, puedes habilitar resaltar último flujo de trabajo ejecutado en configuración",
-    "autoSeasonal": "El tema de rotación estacional automática selecciona un tema festivo cuando puede y recurre a un tema semi-aleatorio",
     "newCommands": "¡Nuevos comandos de flujo de trabajo disponibles ahora! ¡Haz bucles en tus flujos de trabajo y establece la temperatura basada en la temperatura objetivo actual!",
     "miniMode": "¡Modo mini disponible ahora! ¡Solo haz clic en \"Modo Mini\" en el menú de navegación!",
     "miniModeGrid": "Si no tienes flujos de trabajo guardados, el modo mini mostrará una cuadrícula de temperaturas.",

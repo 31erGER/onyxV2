@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { setIsMinimalistMode } from "../settings/settingsSlice";
 import styled from "styled-components";
 import NeuButton from "./neumorphic/NeuButton";
@@ -11,7 +12,10 @@ const MinimalistButton = styled(NeuButton)`
 
 export default function MinimalistModeToggle() {
   const dispatch = useDispatch();
-  const isMinimalistMode = useSelector((state) => state.settings.isMinimalistMode);
+  const { t } = useTranslation();
+  const isMinimalistMode = useSelector(
+    (state) => state.settings.config?.isMinimalistMode
+  );
 
   const handleToggle = () => {
     dispatch(setIsMinimalistMode(!isMinimalistMode));
@@ -19,7 +23,7 @@ export default function MinimalistModeToggle() {
 
   return (
     <MinimalistButton onClick={handleToggle}>
-      {isMinimalistMode ? "Exit Minimalist" : "Minimalist Mode"}
+      {isMinimalistMode ? t("minimalistMode.exit") : t("minimalistMode.enter")}
     </MinimalistButton>
   );
 }

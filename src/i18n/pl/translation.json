@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist Mode",
+    "exit": "Exit Minimalist"
+  },
   "appearance": {
     "title": "Appearance",
     "mode": "Mode",
@@ -31,7 +35,7 @@
     "brightness": "Ustawienie jasności ekranu na 0 wyłącza go",
     "clean": "Nie zapomnij wyczyścić komory na zioła :D",
     "filter": "Pamiętaj o sprawdzeniu filtra powietrza w swoim Volcano",
-    "themes": "Możesz zmienić wygląd aplikacji, wybierając motyw na stronie ustawień",
+    "themes": "You can switch between light and dark mode and pick your own accent colors in the settings!",
     "workflows": "Użyj przepływów pracy, aby przejąć pełną kontrolę nad swoim Volcano",
     "temperatures": "Możesz dodawać lub usuwać temperatury na stronie ustawień",
     "bagReplace": "Regularni użytkownicy powinni wymieniać worki co 2-4 tygodnie dla optymalnego smaku",
@@ -39,7 +43,6 @@
     "preheat": "Dla najlepszych rezultatów podgrzewaj komorę przez 2-5 sekund przed założeniem worka",
     "dragDrop": "Przeciąganie i upuszczanie może być używane do zmiany kolejności przepływów pracy i ich elementów na wszystkich urządzeniach",
     "highlight": "Jeśli chcesz wizualnie zobaczyć ostatnio uruchomiony przepływ pracy, możesz włączyć podświetlanie ostatniego przepływu w ustawieniach",
-    "autoSeasonal": "Motyw Automatycznej Rotacji Sezonowej wybiera świąteczny motyw, gdy to możliwe, i wraca do semi-losowego trybu",
     "newCommands": "Nowe polecenia przepływu pracy już dostępne! Zapętlaj swoje przepływy pracy i ustawiaj temperaturę na podstawie bieżącej temperatury docelowej!",
     "miniMode": "Tryb mini już dostępny! Po prostu kliknij \"Tryb Mini\" w menu nawigacji!",
     "miniModeGrid": "Jeśli nie masz zapisanych przepływów pracy, tryb mini wyświetli siatkę temperatur.",

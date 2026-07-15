@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist Mode",
+    "exit": "Exit Minimalist"
+  },
   "appearance": {
     "title": "Appearance",
     "mode": "Mode",
@@ -31,7 +35,7 @@
     "brightness": "Setting the screen to 0 brightness turns it off",
     "clean": "Don't forget to clean your herb chamber :D",
     "filter": "Remember to check your Volcano's air filter",
-    "themes": "You can change the look of the app by changing themes in the settings page",
+    "themes": "You can switch between light and dark mode and pick your own accent colors in the settings!",
     "workflows": "Use workflows to take full control of your Volcano",
     "temperatures": "You can add or remove temperatures in the settings page",
     "bagReplace": "Frequent users should replace bags every 2-4 weeks for optimal flavor",
@@ -39,7 +43,6 @@
     "preheat": "For best results preheat the chamber for 2-5 seconds before attaching the bag",
     "dragDrop": "Drag and drop can be used to reorder workflows and workflow items on all devices",
     "highlight": "If you want to visually see the last workflow run you can enable highlight last run workflow in settings",
-    "autoSeasonal": "The Auto Seasonal Rotate theme selects a festive theme when it can and falls back on a semi-random theme",
     "newCommands": "New workflow commands out now! Loop your workflows and set the temperature based off the current target temp!",
     "miniMode": "Mini mode available now! Just click \"Mini Mode\" in the nav menu!",
     "miniModeGrid": "If you don't have any workflows saved mini mode will display a grid of temperatures.",

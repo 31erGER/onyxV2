@@ -146,7 +146,6 @@ export default function Ble(props) {
     t("tips.preheat"),
     t("tips.dragDrop"),
     t("tips.highlight"),
-    t("tips.autoSeasonal"),
     t("tips.newCommands"),
     t("tips.miniMode"),
     t("tips.miniModeGrid"),

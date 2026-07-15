@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist Mode",
+    "exit": "Exit Minimalist"
+  },
   "appearance": {
     "title": "Appearance",
     "mode": "Mode",
@@ -31,7 +35,7 @@
     "brightness": "Régler l'écran à 0 de luminosité l'éteint complètement",
     "clean": "N'oubliez pas de nettoyer votre chambre d'herbes :D",
     "filter": "N'oubliez pas de vérifier le filtre à air de votre Volcano", 
-    "themes": "Vous pouvez changer l'apparence de l'app en modifiant les thèmes dans les paramètres",
+    "themes": "You can switch between light and dark mode and pick your own accent colors in the settings!",
     "workflows": "Utilisez les workflows pour prendre le contrôle total de votre Volcano",
     "temperatures": "Vous pouvez ajouter ou supprimer des températures dans les paramètres",
     "bagReplace": "Les utilisateurs fréquents devraient remplacer les sacs toutes les 2-4 semaines pour une saveur optimale",
@@ -39,7 +43,6 @@
     "preheat": "Pour de meilleurs résultats, préchauffez la chambre pendant 2-5 secondes avant d'attacher le sac",
     "dragDrop": "Le glisser-déposer peut être utilisé pour réorganiser les workflows et leurs éléments sur tous les appareils",
     "highlight": "Si vous voulez voir visuellement le dernier workflow exécuté, vous pouvez activer la surbrillance dans les paramètres",
-    "autoSeasonal": "Le thème de rotation saisonnière automatique sélectionne un thème festif quand possible et revient sur un thème semi-aléatoire",
     "newCommands": "Nouvelles commandes de workflow disponibles ! Bouclez vos workflows et définissez la température basée sur la température cible actuelle !",
     "miniMode": "Mode mini maintenant disponible ! Cliquez simplement sur \"Mode Mini\" dans le menu de navigation !",
     "miniModeGrid": "Si vous n'avez aucun workflow sauvegardé, le mode mini affichera une grille de températures.",

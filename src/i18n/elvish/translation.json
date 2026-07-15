@@ -1,4 +1,8 @@
 {
+  "minimalistMode": {
+    "enter": "Minimalist Mode",
+    "exit": "Exit Minimalist"
+  },
   "appearance": {
     "title": "Appearance",
     "mode": "Mode",
@@ -31,7 +35,7 @@
     "brightness": "Setting brightness to naught extinguishes the light",
     "clean": "Keep thy chamber pure as Lothlórien :D",
     "filter": "Check thy air filter as one tends the gardens",
-    "themes": "Change thy realm's appearance in the Hall of Settings",
+    "themes": "You can switch between light and dark mode and pick your own accent colors in the settings!",
     "workflows": "Use workflows to master the Flame of Anor",
     "temperatures": "Add or remove heat levels in the settings forge",
     "bagReplace": "Replace thy vapor pouches every fortnight for finest essence",
@@ -39,7 +43,6 @@
     "preheat": "Warm the chamber briefly ere the bag joins",
     "dragDrop": "Move workflows as Gandalf moves his pieces",
     "highlight": "Mark thy last journey with elven light",
-    "autoSeasonal": "The seasons change thy theme as in Rivendell",
     "newCommands": "New powers of command are granted!",
     "miniMode": "Behold! The compact viewing stone!",
     "miniModeGrid": "Without workflows, see the grid of temperatures",

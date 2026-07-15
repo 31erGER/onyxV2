@@ -61,7 +61,7 @@ import {
 import { setIsF, setAutoShutoffTime } from "../settings/settingsSlice";
 import debounce from "lodash/debounce";
 import { temperatureIncrementedDecrementedDebounceTime } from "../../constants/constants";
-import { DEGREE_SYMBOL, MAX_CELSIUS_TEMP } from "../../constants/temperature";
+import { DEGREE_SYMBOL } from "../../constants/temperature";
 import {
   heatingMask,
   fanMask,
@@ -69,10 +69,7 @@ import {
   celciusMask,
 } from "../../constants/masks";
 import store from "../../store";
-import CurrentTemperature from "../deviceInteraction/CurrentTemperature/CurrentTemperature";
-import CurrentTargetTemperature from "../deviceInteraction/CurrentTargetTemperature/CurrentTargetTemperature";
-import { Range } from "react-range";
-import { useTheme } from "styled-components";
+import TemperatureDial from "../deviceInteraction/TemperatureDial/TemperatureDial";
 import WorkflowItemTypes from "../../constants/enums";
 import { setCurrentStepStartTimestamp } from "../workflowEditor/workflowSlice";
 
@@ -266,15 +263,13 @@ const PlusMinusSection = styled.div`
   position: relative;
 `;
 
-const LeftColumnTemperatureDisplay = styled.div`
+const MinimalistDialContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex: 1;
+  width: 100%;
   justify-content: center;
   align-items: center;
-  gap: 0px;
-  flex: 0 0 auto;
-  height: 80px;
-  max-height: 80px;
+  padding: 12px 4px;
 `;
 
 const ExitButton = styled(WriteTemperature)`
@@ -856,39 +851,6 @@ const AutoOffCircleContainer = styled.div`
   }
 `;
 
-const TemperatureRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-
-  & > div {
-    font-size: 2rem !important;
-    margin-bottom: 0 !important;
-
-    div {
-      font-size: 2rem !important;
-    }
-
-    span {
-      font-size: 1.3rem !important;
-    }
-  }
-`;
-
-const VerticalRangeContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px 0;
-  min-height: 200px;
-  touch-action: none; /* Prevent scroll on mobile when dragging */
-  user-select: none; /* Prevent text selection on drag */
-  z-index: 1;
-  position: relative;
-`;
-
 const WorkflowDetailsCard = styled.div`
   background: transparent;
   border: none;
@@ -1002,7 +964,6 @@ export default function MinimalistLayout() {
   const [localElapsedTime, setLocalElapsedTime] = useState(0);
   const [lastStepId, setLastStepId] = useState(null);
   const [wasWaitingLocal, setWasWaitingLocal] = useState(false);
-  const theme = useTheme();
 
   // Current temperature BLE handler
   useEffect(() => {
@@ -1539,70 +1500,25 @@ export default function MinimalistLayout() {
     onTemperatureIncrementDecrementDebounceRef.current(nextTemp, true);
   };
 
-  // Vertical temperature range functionality
-  const MIN_CELSIUS_TEMP = 170;
-  const sliderDisplayValue = Math.max(
-    MIN_CELSIUS_TEMP,
-    Math.min(MAX_CELSIUS_TEMP, targetTemperature || MIN_CELSIUS_TEMP)
-  );
-
-  const onRangeMouseUp = (e) => {
-    if (!e || !e[0] || !isValueInValidVolcanoCelciusRange(e[0])) {
-      console.warn("Invalid temperature value for range:", e);
-      return;
-    }
-
+  // Temperature dial commit handler (same BLE pattern as TemperatureDialContainer)
+  const onDialTargetCommit = (celsius) => {
+    dispatch(setTargetTemperature(celsius));
     const blePayload = async () => {
-      try {
-        const characteristic = getCharacteristic(writeTemperatureUuid);
-        if (!characteristic) {
-          console.error(
-            "Temperature characteristic not found - redirecting to home"
-          );
-          navigate("/");
-          return;
-        }
-        const buffer = convertToUInt32BLE(e[0] * 10);
-        await characteristic.writeValue(buffer);
-      } catch (error) {
-        console.error(
-          "Error setting temperature range in minimalist mode:",
-          error
-        );
-        navigate("/");
-      }
+      const characteristic = getCharacteristic(writeTemperatureUuid);
+      const buffer = convertToUInt32BLE(celsius * 10);
+      await characteristic.writeValue(buffer);
     };
     AddToQueue(blePayload);
-  };
-
-  const onRangeChange = (e) => {
-    if (!e || !e[0] || !isValueInValidVolcanoCelciusRange(e[0])) {
-      console.warn("Invalid temperature value for range change:", e);
-      return;
-    }
 
     if (!isHeatOn) {
-      const blePayload = async () => {
-        try {
-          const characteristic = getCharacteristic(heatOnUuid);
-          if (!characteristic) {
-            console.error(
-              "Heat characteristic not found - redirecting to home"
-            );
-            navigate("/");
-            return;
-          }
-          const buffer = convertToUInt8BLE(0);
-          await characteristic.writeValue(buffer);
-          dispatch(setIsHeatOn(true));
-        } catch (error) {
-          console.error("Error turning on heat in minimalist mode:", error);
-          navigate("/");
-        }
+      const heatPayload = async () => {
+        const characteristic = getCharacteristic(heatOnUuid);
+        const buffer = convertToUInt8BLE(0);
+        await characteristic.writeValue(buffer);
+        dispatch(setIsHeatOn(true));
       };
-      AddToPriorityQueue(blePayload);
+      AddToPriorityQueue(heatPayload);
     }
-    dispatch(setTargetTemperature(e[0]));
   };
 
   const handleNavigationToggle = () => {
@@ -1742,20 +1658,8 @@ export default function MinimalistLayout() {
     AddToQueue(blePayload);
   };
 
-  // Calculate temperature values and suffix for display
+  // Temperature suffix for display
   const temperatureSuffix = `${DEGREE_SYMBOL}${isF ? "F" : "C"}`;
-  const displayCurrentTemperature =
-    currentTemperature && !isNaN(parseInt(currentTemperature))
-      ? isF
-        ? Math.round(convertToFahrenheitFromCelsius(currentTemperature))
-        : Math.round(currentTemperature)
-      : currentTemperature;
-  const displayTargetTemperature =
-    targetTemperature && !isNaN(parseInt(targetTemperature))
-      ? isF
-        ? Math.round(convertToFahrenheitFromCelsius(targetTemperature))
-        : Math.round(targetTemperature)
-      : targetTemperature;
 
   return (
     <MinimalistWrapper className="minimalist-mode">
@@ -1796,106 +1700,17 @@ export default function MinimalistLayout() {
           </svg>
         </AutoOffCircleContainer>
 
-        <LeftColumnTemperatureDisplay>
-          <TemperatureRow
-            onClick={handleTemperatureUnitToggle}
-            style={{ cursor: "pointer" }}
-          >
-            <CurrentTemperature
-              currentTemperature={displayCurrentTemperature}
-              temperatureSuffix={temperatureSuffix}
-            />
-          </TemperatureRow>
-          <TemperatureRow
-            onClick={handleTemperatureUnitToggle}
-            style={{
-              opacity: isHeatOn ? "1" : "0",
-              transition: "all 0.35s",
-              filter: "grayscale(1)",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            <CurrentTargetTemperature
-              currentTargetTemperature={displayTargetTemperature}
-              temperatureSuffix={temperatureSuffix}
-            />
-          </TemperatureRow>
-        </LeftColumnTemperatureDisplay>
-        <VerticalRangeContainer>
-          <Range
-            step={1}
-            min={MIN_CELSIUS_TEMP}
-            max={MAX_CELSIUS_TEMP}
-            values={[sliderDisplayValue]}
-            onChange={(values) => onRangeChange(values)}
-            onFinalChange={onRangeMouseUp}
-            direction="to top"
-            renderTrack={({ props, children }) => (
-              <div
-                {...props}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  height: "100%",
-                  width: "32px !important",
-                  minWidth: "32px",
-                  maxWidth: "32px",
-                  minHeight: "200px",
-                  borderRadius: ".25rem",
-                  backgroundColor: "#f53803",
-                  backgroundImage:
-                    theme?.temperatureRange?.backgroundVertical ||
-                    "linear-gradient(to top, #f5d020, #f53803)",
-                  opacity: 1,
-                  touchAction: "none",
-                }}
-                onTouchStart={(e) => e.preventDefault()}
-                onTouchMove={(e) => e.preventDefault()}
-              >
-                {children}
-              </div>
-            )}
-            renderThumb={({ props }) => {
-              const { key, ...restProps } = props;
-              return (
-                <div
-                  key={key}
-                  {...restProps}
-                  aria-valuenow={
-                    isF && targetTemperature
-                      ? Math.round(
-                          convertToFahrenheitFromCelsius(targetTemperature)
-                        )
-                      : targetTemperature || MIN_CELSIUS_TEMP
-                  }
-                  style={{
-                    ...restProps.style,
-                    height: "64px",
-                    width: "64px",
-                    backgroundColor:
-                      theme?.temperatureRange?.rangeBoxColor || "#ffffff",
-                    borderColor:
-                      theme?.temperatureRange?.rangeBoxBorderColor || "#f53803",
-                    borderStyle: "solid",
-                    borderWidth:
-                      theme?.temperatureRange?.rangeBoxBorderWidth || "2px",
-                    borderRadius:
-                      theme?.temperatureRange?.rangeBoxBorderRadius || "50%",
-                    background:
-                      theme?.temperatureRange?.rangeBackground ||
-                      theme?.temperatureRange?.rangeBoxColor ||
-                      "#ffffff",
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.3)",
-                    touchAction: "none",
-                  }}
-                  onTouchStart={(e) => e.preventDefault()}
-                  onTouchMove={(e) => e.preventDefault()}
-                />
-              );
-            }}
+        <MinimalistDialContainer>
+          <TemperatureDial
+            compact
+            currentTemperature={currentTemperature}
+            targetTemperature={targetTemperature}
+            isF={isF}
+            isHeatOn={isHeatOn}
+            onTargetCommit={onDialTargetCommit}
+            onCenterClick={handleTemperatureUnitToggle}
           />
-        </VerticalRangeContainer>
+        </MinimalistDialContainer>
       </LeftColumn>
 
       <MiddleColumn
@@ -2142,7 +1957,7 @@ export default function MinimalistLayout() {
                                   >
                                     <span
                                       style={{
-                                        fontFamily: "digital-mono, monospace",
+                                        fontFamily: "monospace",
                                         fontSize: "1.8rem",
                                         fontWeight: 600,
                                         whiteSpace: "nowrap",

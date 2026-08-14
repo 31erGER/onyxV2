@@ -1,7 +1,8 @@
 import {
-  TEMPERATURE_OVERFLOW_THRESHOLD,
   MIN_CELSIUS_TEMP,
   MAX_CELSIUS_TEMP,
+  MIN_READABLE_CELSIUS_TEMP,
+  MAX_PLAUSIBLE_CELSIUS_TEMP,
   DEGREE_SYMBOL,
 } from "../constants/temperature";
 import WorkflowItemTypes from "../constants/enums";
@@ -30,10 +31,13 @@ export function convertBLEtoUint16(bleBuf) {
 }
 
 export function convertToUInt16BLE(val) {
+  // Without this clamp a value of 65536 wraps silently to 0. For the auto shutoff
+  // setting that would mean writing "no shutoff" to the device.
+  const safeValue = Math.min(Math.max(Math.round(val) || 0, 0), 65535);
   const buffer = new ArrayBuffer(2);
   const dataView = new DataView(buffer);
-  dataView.setUint8(0, val % 256);
-  dataView.setUint8(1, Math.floor(val / 256));
+  dataView.setUint8(0, safeValue % 256);
+  dataView.setUint8(1, Math.floor(safeValue / 256));
 
   return buffer;
 }
@@ -59,10 +63,26 @@ export function convertToggleCharacteristicToBool(value, mask) {
   return true;
 }
 
+// Returns null when the device reported a value that cannot be a real temperature.
+// Reporting an unusable reading as a low temperature would be dangerous: the heat
+// watchdog reads it as "still cold" and keeps heating. Callers must keep their last
+// known good value instead of trusting a null.
 export function convertCurrentTemperatureCharacteristicToCelcius(value) {
   const result = Math.round(convertBLEtoUint16(value) / 10);
 
-  return result < TEMPERATURE_OVERFLOW_THRESHOLD ? result : MIN_CELSIUS_TEMP;
+  // Sensor error codes arrive as very large raw values (0xFFFF and friends) and mean
+  // "no usable reading", not "cold".
+  if (
+    result < MIN_READABLE_CELSIUS_TEMP ||
+    result > MAX_PLAUSIBLE_CELSIUS_TEMP
+  ) {
+    return null;
+  }
+
+  // Anything above the highest settable target is passed through unchanged rather than
+  // smoothed away. A genuine overshoot has to stay visible: it satisfies the "target
+  // reached" check and therefore stops the heating instead of prolonging it.
+  return result;
 }
 
 export function convertToFahrenheitFromCelsius(celsius) {

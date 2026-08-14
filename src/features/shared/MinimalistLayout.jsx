@@ -1502,6 +1502,11 @@ export default function MinimalistLayout() {
 
   // Temperature dial commit handler (same BLE pattern as TemperatureDialContainer)
   const onDialTargetCommit = (celsius) => {
+    // The dial geometry already clamps to the valid range, but never write a
+    // temperature to the device without checking it here as well.
+    if (!isValueInValidVolcanoCelciusRange(celsius)) {
+      return;
+    }
     dispatch(setTargetTemperature(celsius));
     const blePayload = async () => {
       const characteristic = getCharacteristic(writeTemperatureUuid);

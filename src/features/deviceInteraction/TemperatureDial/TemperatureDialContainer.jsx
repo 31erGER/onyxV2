@@ -13,6 +13,7 @@ import {
   convertCurrentTemperatureCharacteristicToCelcius,
   convertToUInt32BLE,
   convertToUInt8BLE,
+  isValueInValidVolcanoCelciusRange,
 } from "../../../services/utils";
 import { fahrenheitMask, celciusMask } from "../../../constants/masks";
 import {
@@ -124,6 +125,11 @@ export default function TemperatureDialContainer() {
   };
 
   const onTargetCommit = (celsius) => {
+    // The dial geometry already clamps to the valid range, but never write a
+    // temperature to the device without checking it here as well.
+    if (!isValueInValidVolcanoCelciusRange(celsius)) {
+      return;
+    }
     dispatch(setTargetTemperature(celsius));
     const blePayload = async () => {
       const characteristic = getCharacteristic(writeTemperatureUuid);

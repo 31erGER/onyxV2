@@ -10,10 +10,19 @@ export const deviceInteractionSlice = createSlice({
     isHeatOn: undefined,
   },
   reducers: {
+    // An unusable reading arrives as null. Keeping the last known good temperature is
+    // the safe choice - storing null would let the heat watchdog read the device as
+    // cold and keep heating.
     setCurrentTemperature: (state, action) => {
+      if (action.payload === null || isNaN(action.payload)) {
+        return;
+      }
       state.currentTemperature = action.payload;
     },
     setTargetTemperature: (state, action) => {
+      if (action.payload === null || isNaN(action.payload)) {
+        return;
+      }
       state.targetTemperature = action.payload;
     },
     setIsFanOn: (state, action) => {

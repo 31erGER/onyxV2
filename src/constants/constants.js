@@ -1,5 +1,18 @@
 export const temperatureIncrementedDecrementedDebounceTime = 1000;
 export const localStorageKey = "projectOnyxVapeApp";
+// How often a running heat step re-checks whether its target temperature was reached.
+export const heatWatchdogPollIntervalInMilliseconds = 300;
+// Hard safety cap for a single heat step. While a heat step waits for its target it
+// keeps re-enabling the heater, which overrides the device's own auto shutoff. If the
+// target is not reached within this window something is wrong, so the workflow is
+// aborted and the heater is switched off instead of heating indefinitely.
+export const heatWatchdogTimeoutInMilliseconds = 15 * 60 * 1000;
+// How often a heat step may re-send "heat on" while the device has not yet confirmed
+// the heater is running, and how long that startup grace period lasts. Once either
+// limit is reached, a device-reported "heater off" is treated as a stop request and is
+// never overridden - that includes the device's own auto shutoff and overheat lockout.
+export const maxHeatOnResendAttempts = 3;
+export const heatOnConfirmationGraceInMilliseconds = 5000;
 export const patreonLink = "https://www.patreon.com/ImACoderImACoderImACoder";
 export const githubLink = "https://github.com/ImACoderImACoderImACoder";
 export const redditLink = "https://www.reddit.com/user/ImACoderImACoder";

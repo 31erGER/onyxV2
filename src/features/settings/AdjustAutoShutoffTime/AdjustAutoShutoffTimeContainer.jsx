@@ -58,11 +58,13 @@ export default function AdjustAutoShutoffTimeContainer() {
   const onChange = (e) => {
     if (!didAttemptTurnHeatOff && isHeatOn) {
       setDidAttemptTurnHeatOff(true);
-      dispatch(setIsHeatOn(false));
       const blePayload = async () => {
         const heatOffCharacteristic = getCharacteristic(heatOffUuid);
         const heatOffBuffer = convertToUInt8BLE(0);
         await heatOffCharacteristic.writeValue(heatOffBuffer);
+        // Only report the heater as off once the device actually accepted the command.
+        // Reporting it early would show "off" in the UI while the device keeps heating.
+        dispatch(setIsHeatOn(false));
       };
       AddToPriorityQueue(blePayload);
     }

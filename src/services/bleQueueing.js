@@ -17,8 +17,16 @@ const priorityQueue = [];
 let isQueueProcessing = false;
 let currentWorkflowIndex = 0;
 let workflowFunctions;
+// Bumped every time a workflow starts or is cancelled. Work that was already queued
+// when that happened belongs to an older generation and must not touch the device -
+// otherwise a cancelled workflow can still switch the heater back on.
+let workflowGeneration = 0;
 
 export { currentIntervals, currentSetTimeouts };
+
+export function getWorkflowGeneration() {
+  return workflowGeneration;
+}
 
 export function clearIntervals() {
   while (currentIntervals.length > 0) {
@@ -44,7 +52,8 @@ export function AddToQueue(func) {
 export function cancelCurrentWorkflow(turnFanOff = true) {
   clearIntervals();
   clearTimeouts();
-  workflowFunctions = {};
+  workflowGeneration++;
+  workflowFunctions = [];
   currentWorkflowIndex = -1;
   store.dispatch(setCurrentWorkflowStepId());
   store.dispatch(setCurrentWorkflow());
@@ -100,15 +109,20 @@ async function ProcessQueue() {
 }
 
 export function AddToWorkflowQueue(func) {
+  workflowGeneration++;
   workflowFunctions = func;
   currentWorkflowIndex = -1;
-  ProcessWorkflowQueue();
+  ProcessWorkflowQueue(workflowGeneration);
 }
 
-function ProcessWorkflowQueue() {
-  let currentFunc;
-
+function ProcessWorkflowQueue(generation) {
   const next = (resetIndex) => {
+    // A cancelled or superseded workflow must not keep stepping. Without this guard a
+    // step that was already scheduled can still run - and a heat step would switch the
+    // heater on and start a fresh watchdog after the user cancelled.
+    if (generation !== workflowGeneration) {
+      return;
+    }
     if (resetIndex) {
       currentWorkflowIndex = -1;
     }
@@ -117,14 +131,31 @@ function ProcessWorkflowQueue() {
       store.dispatch(setCurrentWorkflowStepId());
       store.dispatch(setCurrentStepEllapsedTimeInSeconds(0));
     }
-    currentFunc = workflowFunctions[currentWorkflowIndex + 1];
-    if (!currentFunc) return;
-    setTimeout(() => {
-      AddToQueue(async () => {
-        await currentFunc(next);
-        currentWorkflowIndex++;
-      });
-    }, 0);
+    const currentFunc = workflowFunctions[currentWorkflowIndex + 1];
+    if (!currentFunc) {
+      // The workflow ran to its end. Make sure no heat watchdog survives it - one that
+      // outlives its workflow would keep re-enabling the heater in the background.
+      clearIntervals();
+      clearTimeouts();
+      return;
+    }
+    currentSetTimeouts.push(
+      setTimeout(() => {
+        AddToQueue(async () => {
+          if (generation !== workflowGeneration) {
+            return;
+          }
+          await currentFunc(next);
+          // Re-check after the await: a cancel during the step's BLE write would
+          // otherwise let this advance the *new* workflow's index and skip a step -
+          // possibly the heat off.
+          if (generation !== workflowGeneration) {
+            return;
+          }
+          currentWorkflowIndex++;
+        });
+      }, 0)
+    );
   };
   next();
 }

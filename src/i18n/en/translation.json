@@ -1,4 +1,9 @@
 {
+  "controls": {
+    "notConnectedTitle": "No Device Connected",
+    "notConnectedDescription": "Connect your Volcano Hybrid to start controlling it.",
+    "connectButton": "Connect Device"
+  },
   "minimalistMode": {
     "enter": "Minimalist Mode",
     "exit": "Exit Minimalist"
@@ -328,8 +333,19 @@
     "workflowEditor": "Workflow Editor",
     "contactMe": "Contact Me",
     "settings": "Settings",
+    "device": "Device",
     "disconnect": "Disconnect",
     "miniMode": "Mini Mode"
+  },
+  "devicePage": {
+    "title": "Device",
+    "connect": "Connect Device",
+    "connectDescription": "Tap the button above to connect to your Volcano Hybrid via Bluetooth.",
+    "disconnect": "Disconnect Device",
+    "settingsTitle": "Device Settings",
+    "settingsDescription": "Adjust your Volcano Hybrid hardware settings",
+    "infoTitle": "Device Information",
+    "infoDescription": "Hardware details and usage statistics"
   },
   "contactPage": {
     "title": "📞 Contact Me"

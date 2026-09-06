@@ -1,8 +1,8 @@
-import { Outlet, useNavigate, Link } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { useEffect, useCallback } from "react";
 import {
-  clearCache,
   getCharacteristic,
+  isDeviceConnected,
 } from "../../../services/BleCharacteristicCache";
 import * as uuIds from "../../../constants/uuids";
 import "./Volcano.css";
@@ -60,16 +60,11 @@ const BrandLink = styled(Link)`
 
 export default function VolcanoLoader(props) {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const OnDisconnectClick = async () => {
-    const bleDevice = getCharacteristic(uuIds.bleDeviceUuid);
-    await bleDevice.gatt.disconnect();
-    clearCache();
-    navigate("/");
-  };
-
+  // Set up BLE event listeners only when connected
   useEffect(() => {
+    if (!isDeviceConnected()) return;
+
     const handlePrj1ChangedVolcano = (event) => {
       let currentVal = convertBLEtoUint16(event.target.value);
       const newHeatValue = convertToggleCharacteristicToBool(
@@ -89,7 +84,13 @@ export default function VolcanoLoader(props) {
         dispatch(setIsFanOn(newFanValue));
       }
     };
-    const characteristicPrj1V = getCharacteristic(uuIds.register1Uuid);
+
+    let characteristicPrj1V;
+    try {
+      characteristicPrj1V = getCharacteristic(uuIds.register1Uuid);
+    } catch {
+      return;
+    }
 
     const blePayload = async () => {
       await characteristicPrj1V.addEventListener(
@@ -112,7 +113,15 @@ export default function VolcanoLoader(props) {
   }, [dispatch]);
 
   const readFOrCToStore = useCallback(() => {
-    const characteristicPrj2V = getCharacteristic(uuIds.register2Uuid);
+    if (!isDeviceConnected()) return;
+
+    let characteristicPrj2V;
+    try {
+      characteristicPrj2V = getCharacteristic(uuIds.register2Uuid);
+    } catch {
+      return;
+    }
+
     const blePayload = async () => {
       const value = await characteristicPrj2V.readValue();
       const convertedValue = convertBLEtoUint16(value);
@@ -129,7 +138,7 @@ export default function VolcanoLoader(props) {
 
   useEffect(() => {
     const handler = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && isDeviceConnected()) {
         setTimeout(() => {
           const blePayload = async () => {
             const characteristicPrj1V = getCharacteristic(uuIds.register1Uuid);
@@ -160,6 +169,8 @@ export default function VolcanoLoader(props) {
 
   //bind event handlers for register2
   useEffect(() => {
+    if (!isDeviceConnected()) return;
+
     function handlePrj2ChangedVolcano(event) {
       const currentVal = convertBLEtoUint16(event.target.value);
       const changedValue = convertToggleCharacteristicToBool(
@@ -170,7 +181,14 @@ export default function VolcanoLoader(props) {
         dispatch(setIsF(changedValue));
       }
     }
-    const characteristicPrj2V = getCharacteristic(uuIds.register2Uuid);
+
+    let characteristicPrj2V;
+    try {
+      characteristicPrj2V = getCharacteristic(uuIds.register2Uuid);
+    } catch {
+      return;
+    }
+
     const blePayload = async () => {
       await characteristicPrj2V.addEventListener(
         "characteristicvaluechanged",
@@ -200,7 +218,7 @@ export default function VolcanoLoader(props) {
   return (
     <MainWrapper>
       <Header>
-        <BrandLink to="/Volcano/App">Project Onyx</BrandLink>
+        <BrandLink to="/">Project Onyx</BrandLink>
         <AutoOff style={{ marginLeft: "10px" }} />
         <CurrentWorkflowExecutionDisplay />
       </Header>
@@ -213,7 +231,7 @@ export default function VolcanoLoader(props) {
         </ScrollingDiv>
       </ContentWrapper>
 
-      <BottomNav onDisconnect={OnDisconnectClick} />
+      <BottomNav />
     </MainWrapper>
   );
 }

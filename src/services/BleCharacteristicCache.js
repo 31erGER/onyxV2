@@ -9,6 +9,10 @@ export function cacheContainsCharacteristic(characteristicId) {
   return false;
 }
 
+export function isDeviceConnected() {
+  return cacheContainsCharacteristic(uuIds.bleDeviceUuid);
+}
+
 export function clearCache() {
   cache = {};
 }

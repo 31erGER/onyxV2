@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import BleConnectButtonContainer from "./features/deviceBLEconnection/BleContainer";
-import VolcanoLoaderLoader from "./features/shared/OutletRenderer/VolcanoLoaderLoader";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import VolcanoLoader from "./features/shared/OutletRenderer/VolcanoLoader";
 import Volcano from "./features/deviceInteraction/DeviceInteraction";
 import ContactMe from "./features/contactMe/ContactMe";
 import { clearCache } from "./services/BleCharacteristicCache";
@@ -19,6 +18,7 @@ import { TouchBackend } from "react-dnd-touch-backend";
 import { isMobile } from "./constants/constants";
 import DragPreview from "./features/workflowEditor/DND/DragPreview";
 import MinimalistLayout from "./features/shared/MinimalistLayout";
+import DevicePage from "./features/device/DevicePage";
 import { convertToFahrenheitFromCelsius } from "./services/utils";
 import { DEGREE_SYMBOL, MIN_CELSIUS_TEMP, MAX_CELSIUS_TEMP } from "./constants/temperature";
 const Div = styled.div`
@@ -64,24 +64,27 @@ const GlobalStyle = createGlobalStyle`
 
 function AppRoutes({ isMinimalistMode }) {
   const location = useLocation();
-  
-  // Show minimalist mode only when connected (not on home page)
-  const shouldShowMinimalistMode = isMinimalistMode && location.pathname !== "/";
-  
+
+  // Show minimalist mode only when connected (not on device page)
+  const shouldShowMinimalistMode = isMinimalistMode && location.pathname !== "/device";
+
   if (shouldShowMinimalistMode) {
     return <MinimalistLayout />;
   }
-  
+
   return (
     <Routes>
-      <Route path="/" element={<BleConnectButtonContainer />} />
-      <Route path="Volcano" element={<VolcanoLoaderLoader />}>
-        <Route path="App" element={<Volcano />} />
-        <Route path="Settings" element={<Settings />} />
-        <Route path="WorkflowEditor" element={<WorkflowEditor />} />
-        <Route path="ContactMe" element={<ContactMe />} />
+      <Route element={<VolcanoLoader />}>
+        <Route index element={<Volcano />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="workflow" element={<WorkflowEditor />} />
+        <Route path="contact" element={<ContactMe />} />
+        <Route path="device" element={<DevicePage />} />
       </Route>
-      <Route path="*" element={<BleConnectButtonContainer />} />
+      {/* Redirect old routes */}
+      <Route path="Volcano/App" element={<Navigate to="/" replace />} />
+      <Route path="Volcano/*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
@@ -111,7 +114,7 @@ function App() {
     [resolvedMode, accentColors?.start, accentColors?.end]
   );
   const isMinimalistMode = useSelector((state) => state.settings.config?.isMinimalistMode || false);
-  
+
   // Temperature state for page title
   const currentTemperature = useSelector((state) => state.deviceInteraction.currentTemperature);
   const targetTemperature = useSelector((state) => state.deviceInteraction.targetTemperature);
@@ -150,11 +153,11 @@ function App() {
     const displayCurrentTemperature = currentTemp && !isNaN(parseInt(currentTemp))
       ? Math.round(currentTemp)
       : null;
-      
+
     const displayTargetTemperature = targetTemp && !isNaN(parseInt(targetTemp))
       ? Math.round(targetTemp)
       : null;
-    
+
     if (displayCurrentTemperature && displayTargetTemperature && showCurrentTemp) {
       document.title = `${displayCurrentTemperature}/${displayTargetTemperature}${DEGREE_SYMBOL}${isF ? "F" : "C"} - Onyx`;
     } else if (displayCurrentTemperature && showCurrentTemp) {

@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import ControlsIcon from "../OutletRenderer/icons/ControlsIcon";
 import WorkflowEditorIcon from "../OutletRenderer/icons/WorkflowEditorIcon";
@@ -59,54 +58,28 @@ const Item = styled(NavLink)`
   }
 `;
 
-const DisconnectButton = styled.button`
-  ${itemStyles}
-  background: ${(p) => p.theme.neumorphic.surface};
-  color: ${(p) => p.theme.neumorphic.danger};
-  box-shadow: none;
-
-  &:active {
-    box-shadow: ${(p) => p.theme.neumorphic.pressed};
-  }
-
-  div {
-    display: inline-flex;
-    color: inherit;
-  }
-
-  svg {
-    width: 1.4rem;
-    height: 1.4rem;
-  }
-`;
-
-export default function BottomNav({ onDisconnect }) {
+export default function BottomNav() {
   const { t } = useTranslation();
   return (
     <Bar>
-      <Item to="/Volcano/App" aria-label={t("navigation.controls")}>
+      <Item to="/" end aria-label={t("navigation.controls")}>
         <ControlsIcon />
       </Item>
       <Item
-        to="/Volcano/WorkflowEditor"
+        to="/workflow"
         aria-label={t("navigation.workflowEditor")}
       >
         <WorkflowEditorIcon />
       </Item>
-      <Item to="/Volcano/Settings" aria-label={t("navigation.settings")}>
+      <Item to="/settings" aria-label={t("navigation.settings")}>
         <SettingsIcon />
       </Item>
-      <Item to="/Volcano/ContactMe" aria-label={t("navigation.contactMe")}>
+      <Item to="/contact" aria-label={t("navigation.contactMe")}>
         <ContactMeIcon />
       </Item>
-      <DisconnectButton
-        onClick={onDisconnect}
-        aria-label={t("navigation.disconnect")}
-      >
+      <Item to="/device" aria-label={t("navigation.device")}>
         <BluetoothDisconnectIcon />
-      </DisconnectButton>
+      </Item>
     </Bar>
   );
 }
-
-BottomNav.propTypes = { onDisconnect: PropTypes.func.isRequired };

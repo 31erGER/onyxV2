@@ -1,4 +1,4 @@
-import { getCharacteristic } from "../../../services/BleCharacteristicCache";
+import { getCharacteristic, isDeviceConnected } from "../../../services/BleCharacteristicCache";
 import {
   autoShutoffUuid,
   autoShutoffSettingUuid,
@@ -28,6 +28,8 @@ export default function AutoOff(props) {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    if (!isDeviceConnected()) return;
+
     const intervalFunction = () => {
       const blePayload = async () => {
         if (!isHeatOnRef.current) {

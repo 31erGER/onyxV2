@@ -1,11 +1,4 @@
-import FOrC from "./FOrC/FOrCContainer";
-import FOrCLoader from "./FOrC/FOrCLoader";
-import AdjustAutoShutoffTimeContainer from "./AdjustAutoShutoffTime/AdjustAutoShutoffTimeContainer";
-import AdjustLEDbrightnessContainer from "./AdjustLEDbrightness/AdjustLEDbrightnessContainer";
-import DisplayOnCoolingToggleContainer from "./DisplayOnCoolingToggle/DisplayOnCoolingToggleContainer";
-
 import TemperatureControlSettings from "./TemperatureControlValues/TemperatureControlSettingsContainer";
-import VibrationToggleContainer from "./VibrationToggle/VibrationToggleContainer";
 import Div from "../shared/styledComponents/RootNonAppOutletDiv";
 import AppearanceSettings from "./Appearance/AppearanceSettings";
 import PrideText from "../../themes/PrideText";
@@ -13,7 +6,6 @@ import TurnHeatOnWhenConnectionIsEstablished from "./TurnHeatOnWhenConnectionIsE
 import HighlightLastRunWorkflow from "./HighlightLastRunWorkflow/HighlightLastRunWorkflow";
 import PWAInstall, { usePWAInstallAvailable } from "./InstallPWA/PWAInstall";
 import SettingsSection from "./SettingsSection";
-import DeviceInformation from "../deviceInformation/DeviceInformation";
 import LanguageSelector from "./LanguageSelector/LanguageSelector";
 import MinimalistModeToggle from "../shared/MinimalistModeToggle";
 import { useTranslation } from "react-i18next";
@@ -57,29 +49,6 @@ export default function Settings() {
           <PWAInstall />
         </SettingsSection>
       )}
-
-      <SettingsSection
-        title={t("settings.volcano.title")}
-        icon="🌋"
-        description={t("settings.volcano.description")}
-        defaultExpanded={false}
-      >
-        <AdjustAutoShutoffTimeContainer />
-        <AdjustLEDbrightnessContainer />
-        <VibrationToggleContainer />
-        <DisplayOnCoolingToggleContainer />
-        <FOrCLoader useSpinnerToShowLoader>
-          <FOrC />
-        </FOrCLoader>
-      </SettingsSection>
-      <SettingsSection
-        title={t("settings.device.title")}
-        icon="📋"
-        description={t("settings.device.description")}
-        defaultExpanded={false}
-      >
-        <DeviceInformation />
-      </SettingsSection>
     </Div>
   );
 }

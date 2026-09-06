@@ -1018,7 +1018,7 @@ export default function MinimalistLayout() {
           "Error setting up current temperature BLE handler in minimalist mode:",
           error
         );
-        navigate("/");
+        navigate("/device");
       }
     };
 
@@ -1078,7 +1078,7 @@ export default function MinimalistLayout() {
           "Error setting up target temperature BLE handler in minimalist mode:",
           error
         );
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToQueue(blePayload);
@@ -1108,7 +1108,7 @@ export default function MinimalistLayout() {
                 "Error reading current temperature on visibility change:",
                 error
               );
-              navigate("/");
+              navigate("/device");
             }
           };
           AddToQueue(currentTempPayload);
@@ -1132,7 +1132,7 @@ export default function MinimalistLayout() {
                 "Error reading target temperature on visibility change:",
                 error
               );
-              navigate("/");
+              navigate("/device");
             }
           };
           AddToQueue(targetTempPayload);
@@ -1213,7 +1213,7 @@ export default function MinimalistLayout() {
           "Error setting up heat/fan status BLE handler in minimalist mode:",
           error
         );
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToQueue(blePayload);
@@ -1271,7 +1271,7 @@ export default function MinimalistLayout() {
           "Error setting up temperature unit BLE handler in minimalist mode:",
           error
         );
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToQueue(blePayload);
@@ -1440,7 +1440,7 @@ export default function MinimalistLayout() {
             console.error(
               "Temperature characteristic not found - redirecting to home"
             );
-            navigate("/");
+            navigate("/device");
             return;
           }
           buffer = convertToUInt32BLE(value * 10);
@@ -1454,7 +1454,7 @@ export default function MinimalistLayout() {
             console.error(
               "Heat characteristic not found - redirecting to home"
             );
-            navigate("/");
+            navigate("/device");
             return;
           }
           buffer = convertToUInt8BLE(0);
@@ -1463,7 +1463,7 @@ export default function MinimalistLayout() {
         }
       } catch (error) {
         console.error("Error setting temperature in minimalist mode:", error);
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToPriorityQueue(blePayload);
@@ -1479,7 +1479,7 @@ export default function MinimalistLayout() {
             console.error(
               "Heat characteristic not found - redirecting to home"
             );
-            navigate("/");
+            navigate("/device");
             return;
           }
           buffer = convertToUInt8BLE(0);
@@ -1487,7 +1487,7 @@ export default function MinimalistLayout() {
           dispatch(setIsHeatOn(true));
         } catch (error) {
           console.error("Error turning on heat in minimalist mode:", error);
-          navigate("/");
+          navigate("/device");
         }
       };
       AddToPriorityQueue(blePayload);
@@ -1573,7 +1573,7 @@ export default function MinimalistLayout() {
         const characteristic = getCharacteristic(uuid);
         if (!characteristic) {
           console.error("Heat characteristic not found - redirecting to home");
-          navigate("/");
+          navigate("/device");
           return;
         }
         const buffer = convertToUInt8BLE(0);
@@ -1581,7 +1581,7 @@ export default function MinimalistLayout() {
         dispatch(setIsHeatOn(!isHeatOn));
       } catch (error) {
         console.error("Error controlling heat in minimalist mode:", error);
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToPriorityQueue(blePayload);
@@ -1594,7 +1594,7 @@ export default function MinimalistLayout() {
         const characteristic = getCharacteristic(uuid);
         if (!characteristic) {
           console.error("Fan characteristic not found - redirecting to home");
-          navigate("/");
+          navigate("/device");
           return;
         }
         const buffer = convertToUInt8BLE(0);
@@ -1602,7 +1602,7 @@ export default function MinimalistLayout() {
         dispatch(setIsFanOn(!isFanOn));
       } catch (error) {
         console.error("Error controlling fan in minimalist mode:", error);
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToPriorityQueue(blePayload);
@@ -1633,7 +1633,8 @@ export default function MinimalistLayout() {
       console.warn("Error disconnecting BLE device:", error);
     }
     clearCache();
-    navigate("/");
+    dispatch(setIsMinimalistMode(false));
+    navigate("/device");
   };
 
   const handleTemperatureUnitToggle = () => {
@@ -1644,7 +1645,7 @@ export default function MinimalistLayout() {
           console.error(
             "Register2 characteristic not found - redirecting to home"
           );
-          navigate("/");
+          navigate("/device");
           return;
         }
 
@@ -1657,7 +1658,7 @@ export default function MinimalistLayout() {
           "Error toggling temperature units in minimalist mode:",
           error
         );
-        navigate("/");
+        navigate("/device");
       }
     };
     AddToQueue(blePayload);
@@ -2414,7 +2415,7 @@ export default function MinimalistLayout() {
           <NavigationItem
             as="div"
             onClick={() =>
-              handleNavigationItemClick(() => navigate("/Volcano/App"))
+              handleNavigationItemClick(() => navigate("/"))
             }
             style={{ cursor: "pointer" }}
           >
@@ -2425,7 +2426,7 @@ export default function MinimalistLayout() {
             as="div"
             onClick={() =>
               handleNavigationItemClick(() =>
-                navigate("/Volcano/WorkflowEditor")
+                navigate("/workflow")
               )
             }
             style={{ cursor: "pointer" }}
@@ -2436,7 +2437,7 @@ export default function MinimalistLayout() {
           <NavigationItem
             as="div"
             onClick={() =>
-              handleNavigationItemClick(() => navigate("/Volcano/ContactMe"))
+              handleNavigationItemClick(() => navigate("/contact"))
             }
             style={{ cursor: "pointer" }}
           >
@@ -2446,7 +2447,7 @@ export default function MinimalistLayout() {
           <NavigationItem
             as="div"
             onClick={() =>
-              handleNavigationItemClick(() => navigate("/Volcano/Settings"))
+              handleNavigationItemClick(() => navigate("/settings"))
             }
             style={{ cursor: "pointer" }}
           >
@@ -2456,12 +2457,11 @@ export default function MinimalistLayout() {
           <NavigationItem
             as="div"
             onClick={() => {
-              setShowNavigation(false);
-              handleDisconnect();
+              handleNavigationItemClick(() => navigate("/device"));
             }}
             style={{ cursor: "pointer" }}
           >
-            <PrideText text={t('navigation.disconnect')} />
+            <PrideText text={t('navigation.device')} />
             <BluetoothDisconnectIcon />
           </NavigationItem>
         </NavigationMenu>

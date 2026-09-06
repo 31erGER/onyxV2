@@ -172,7 +172,7 @@ function App() {
         <GlobalStyle />
         <DragPreview />
         <Div>
-          <BrowserRouter>
+          <BrowserRouter basename="/onyxV2">
             <AppRoutes isMinimalistMode={isMinimalistMode} />
           </BrowserRouter>
         </Div>

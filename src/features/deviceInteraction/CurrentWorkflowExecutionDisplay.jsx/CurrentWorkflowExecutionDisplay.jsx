@@ -46,7 +46,7 @@ const WorkflowWidget = styled.div`
   position: relative;
   display: inline-block;
   margin-left: 10px;
-  min-height: 70px;
+  min-height: 50px;
   opacity: ${(props) => (props.isVisible ? "1" : "0")};
   transition: opacity 0.75s;
 `;
@@ -220,7 +220,6 @@ const LoopIndicator = styled.span`
 const CircularProgress = styled.div`
   width: 50px;
   position: relative;
-  margin-top: 10px;
 
   .circular-chart {
     display: block;
@@ -613,20 +612,9 @@ export default function CurrentWorkflowExecutionDisplay() {
       setIsExpanded(true);
 
       // Simple positioning - just center below the button
-      setTimeout(() => {
+      const positionTimeout = setTimeout(() => {
         if (buttonRef.current) {
           const rect = buttonRef.current.getBoundingClientRect();
-
-          console.log("DEBUG: Button rect:", {
-            top: rect.top,
-            bottom: rect.bottom,
-            left: rect.left,
-            right: rect.right,
-            width: rect.width,
-            height: rect.height,
-            element: buttonRef.current,
-            elementHTML: buttonRef.current.outerHTML.substring(0, 200),
-          });
 
           setTooltipPosition({
             top: `${rect.bottom + 8}px`,
@@ -634,15 +622,9 @@ export default function CurrentWorkflowExecutionDisplay() {
             arrowLeft: "50%",
             transform: "translateX(-50%)",
           });
-
-          console.log("DEBUG: Set tooltip position to:", {
-            top: `${rect.bottom + 8}px`,
-            left: `${rect.left + rect.width / 2}px`,
-          });
-        } else {
-          console.log("DEBUG: buttonRef.current is null");
         }
       }, 100);
+      return () => clearTimeout(positionTimeout);
     }
   }, [isWorkflowExecuting]);
 

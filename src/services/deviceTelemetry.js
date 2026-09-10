@@ -18,20 +18,22 @@ export function stopDeviceTelemetry() {
 export async function startDeviceTelemetry() {
   stopDeviceTelemetry();
   const generation = session;
-  let observedHeat = false;
   let pending = false;
   const active = () => session === generation;
   const handlers = [
     [register1Uuid, (value) => {
       const status = convertBLEtoUint16(value);
       const heat = (status & heatingMask) !== 0;
+      // Successful app OFF writes also update this state. A separate cached
+      // value would mistake their delayed notifications for a fresh physical
+      // stop after a replacement workflow has already started.
+      const observedHeat = store.getState().deviceInteraction.isHeatOn;
       const workflow = store.getState().workflow;
       const step = workflow.currentWorkflow?.payload?.[workflow.currentWorkflowStepId - 1];
       // A planned HEAT_OFF step is allowed; all other physical OFF transitions win.
       if (observedHeat && !heat && workflow.currentWorkflow && step?.type !== "heatOff") {
         cancelCurrentWorkflow();
       }
-      observedHeat = heat;
       store.dispatch(setIsHeatOn(heat));
       store.dispatch(setIsFanOn((status & fanMask) !== 0));
     }],

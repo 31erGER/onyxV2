@@ -4,7 +4,7 @@ vi.hoisted(() => {
   globalThis.window = { localStorage: { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => data.set(k, v) } };
   globalThis.alert = vi.fn();
 });
-const device = vi.hoisted(() => ({ writes: [], temp: 200, target: 180, heat: false, failTarget: false, pendingFan: null }));
+const device = vi.hoisted(() => ({ writes: [], temp: 200, target: 180, heat: false, failTarget: false, pendingFan: null, listeners: new Map() }));
 vi.mock("react-redux", async () => {
   const { default: store } = await import("../../store");
   return { useDispatch: () => store.dispatch, useSelector: (selector) => selector(store.getState()) };
@@ -13,6 +13,9 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key) => key }) })
 vi.mock("../../services/BleCharacteristicCache", () => ({
   isDeviceConnected: () => true,
   getCharacteristic: (uuid) => ({
+    addEventListener: (_, listener) => device.listeners.set(uuid, listener),
+    removeEventListener: () => device.listeners.delete(uuid),
+    startNotifications: async () => {},
     writeValue: async (buffer) => {
       device.writes.push(uuid);
       if (uuid.includes("10110003")) {
@@ -36,7 +39,8 @@ import store from "../../store";
 import { setCurrentWorkflows } from "../settings/settingsSlice";
 import { setCurrentTemperature, setTargetTemperature, setIsHeatOn, setControlError } from "../deviceInteraction/deviceInteractionSlice";
 import { cancelCurrentWorkflow, clearQueuesAndTimers, resumeWorkflow } from "../../services/bleQueueing";
-import { heatOnUuid, heatOffUuid, fanOffUuid, writeTemperatureUuid } from "../../constants/uuids";
+import { heatOnUuid, heatOffUuid, fanOnUuid, fanOffUuid, writeTemperatureUuid, register1Uuid } from "../../constants/uuids";
+import { startDeviceTelemetry, stopDeviceTelemetry } from "../../services/deviceTelemetry";
 
 function start(payload) {
   store.dispatch(setCurrentWorkflows([{ id: 99, name: "test", payload }]));
@@ -51,7 +55,42 @@ beforeEach(() => {
   store.dispatch(setTargetTemperature(180));
   store.dispatch(setIsHeatOn(false));
 });
-afterEach(async () => { clearQueuesAndTimers(); await vi.runAllTimersAsync(); vi.useRealTimers(); vi.restoreAllMocks(); });
+afterEach(async () => { stopDeviceTelemetry(); clearQueuesAndTimers(); await vi.runAllTimersAsync(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+function emitHeat(heat) {
+  const value = new DataView(new ArrayBuffer(2));
+  value.setUint16(0, heat ? 32 : 0, true);
+  device.listeners.get(register1Uuid)?.({ target: { value } });
+}
+
+it("keeps the step display and advances after a delayed OFF acknowledgement from workflow startup", async () => {
+  device.heat = true;
+  await startDeviceTelemetry();
+  start([{ type: "heatOn", payload: 190 }, { type: "fanOn", payload: 0.5 }, { type: "heatOff" }]);
+  await vi.advanceTimersByTimeAsync(100);
+  // The previous heater was switched off before starting. Its notification can
+  // arrive after writeValue resolved and the new target was already written.
+  emitHeat(false);
+  expect(store.getState().workflow.currentWorkflowStepId).toBe(1);
+  expect(store.getState().workflow.currentWorkflow?.id).toBe(99);
+  emitHeat(true);
+  device.temp = 190;
+  await vi.advanceTimersByTimeAsync(2500);
+  expect(device.writes.slice(-3)).toEqual([fanOnUuid, fanOffUuid, heatOffUuid]);
+  expect(store.getState().workflow.currentWorkflow).toBeUndefined();
+});
+
+it("still aborts for a real device OFF after the new heater ON was observed", async () => {
+  await startDeviceTelemetry();
+  start([{ type: "heatOn", payload: 190 }, { type: "fanOn", payload: 0.5 }]);
+  await vi.advanceTimersByTimeAsync(100);
+  emitHeat(true);
+  device.heat = false;
+  emitHeat(false);
+  await vi.advanceTimersByTimeAsync(2000);
+  expect(store.getState().workflow.currentWorkflow).toBeUndefined();
+  expect(device.writes).not.toContain(fanOnUuid);
+});
 
 it("never sends heat ON if setting the target fails", async () => {
   device.failTarget = true;

@@ -7,6 +7,7 @@ import styled from "styled-components";
 import CurrentWorkflowExecutionDisplay from "../../deviceInteraction/CurrentWorkflowExecutionDisplay.jsx/CurrentWorkflowExecutionDisplay";
 import withScrolling from "react-dnd-scrolling";
 import AutoOff from "../../deviceInteraction/AutoOff/AutoOff";
+import { useSelector } from "react-redux";
 
 const ScrollingDiv = withScrolling("div");
 
@@ -42,6 +43,7 @@ const BrandLink = styled(Link)`
 `;
 
 export default function VolcanoLoader(props) {
+  const currentWorkflow = useSelector((state) => state.workflow.currentWorkflow);
   const outletStyling = {
     display: "flex",
     justifyContent: "space-between",
@@ -52,8 +54,11 @@ export default function VolcanoLoader(props) {
     <MainWrapper>
       <Header>
         <BrandLink to="/">Project Onyx</BrandLink>
-        <AutoOff style={{ marginLeft: "10px" }} />
-        <CurrentWorkflowExecutionDisplay />
+        {currentWorkflow ? (
+          <CurrentWorkflowExecutionDisplay />
+        ) : (
+          <AutoOff style={{ marginLeft: "10px" }} />
+        )}
       </Header>
 
       <ContentWrapper>

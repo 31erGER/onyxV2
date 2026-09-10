@@ -41,12 +41,20 @@ Sources:
 
 ## Verification and practical limits
 
+### Follow-up: workflow startup and step display
+
+A delayed acknowledgement of the app's startup HEAT OFF could cancel the replacement workflow after its first temperature write. Telemetry retained a private "heater previously on" value even though the completed OFF command had updated Redux. Status transitions now use the shared heater state, so that acknowledgement does not look like a new physical stop. An observed ON followed by device OFF still cancels the workflow. Regression tests exercise the real workflow queue together with telemetry notifications, including the subsequent pump and shutdown steps.
+
+The header now uses one circle: workflow steps while running, automatic-shutoff time otherwise. A DOM integration test checks step updates and restoration on completion; the expanded display's positioning timer is cleared on unmount. Mobile visual checks use simulated state without connecting to a device.
+
+The follow-up verification passed 104 tests in 13 files, including the DOM test using the development-only jsdom dependency.
+
 Regression tests use simulated Bluetooth characteristics, failure injection, delayed promises, and fake clocks. They cover normal completion, cancellation, startup/shutdown races, invalid configuration, connection cleanup, blocked activation, timer suspension, wake-lock release/reacquisition, and queue serialization. No tests heat a physical device.
 
 The application and the error/pause notices were inspected in a 412 × 915 browser viewport. Theme colors are reused, and existing PrideText rendering is preserved. Browser viewport testing is not a physical S25 Ultra test.
 
 `npm test` and `npm run build` are the release checks. Repository-wide ESLint has pre-existing failures; comparing diagnostics in changed files against HEAD showed no additional lint errors. Existing build warnings include a duplicate style prop in WorkflowItemDrag, bundle size, and old Browserslist data.
 
-The verification run passed 101 tests in 12 files and built the production/PWA assets. Full lint reported 240 errors and 88 warnings; the changed-file comparison retained the same 10 pre-existing errors. The GitHub Pages deployment now runs the regression tests before building.
+The initial safety-audit verification passed 101 tests in 12 files and built the production/PWA assets. Full lint reported 240 errors and 88 warnings; the changed-file comparison retained the same 10 pre-existing errors. The GitHub Pages deployment now runs the regression tests before building.
 
 Before relying on locked-screen behavior, reproduce with a BLE simulator or a manufacturer-cleared device under supervision: compare foreground, app switching, and screen locking; inspect actual HEAT/AIR status and the interrupted-workflow notice on return. Do not use a device showing recurring 03r for unattended or stress testing. A successful BLE write acknowledges a command, not physical shutdown, and this review is not a guarantee of bug-free software or device safety.

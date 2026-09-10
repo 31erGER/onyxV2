@@ -8,19 +8,22 @@ export const deviceInteractionSlice = createSlice({
     targetTemperature: undefined,
     isFanOn: undefined,
     isHeatOn: undefined,
+    controlError: null,
   },
   reducers: {
-    // An unusable reading arrives as null. Keeping the last known good temperature is
-    // the safe choice - storing null would let the heat watchdog read the device as
-    // cold and keep heating.
+    setControlError: (state, action) => {
+      state.controlError = action.payload;
+    },
+    // Retain the last display value on invalid data. Connection-owned telemetry
+    // separately faults the controls; this value must not drive automatic heating.
     setCurrentTemperature: (state, action) => {
-      if (action.payload === null || isNaN(action.payload)) {
+      if (!Number.isFinite(action.payload)) {
         return;
       }
       state.currentTemperature = action.payload;
     },
     setTargetTemperature: (state, action) => {
-      if (action.payload === null || isNaN(action.payload)) {
+      if (!Number.isFinite(action.payload)) {
         return;
       }
       state.targetTemperature = action.payload;
@@ -39,6 +42,7 @@ export const deviceInteractionSlice = createSlice({
         targetTemperature: undefined,
         isFanOn: undefined,
         isHeatOn: undefined,
+        controlError: null,
       };
     });
   },
@@ -50,6 +54,7 @@ export const {
   setTargetTemperature,
   setIsFanOn,
   setIsHeatOn,
+  setControlError,
 } = deviceInteractionSlice.actions;
 
 export default deviceInteractionSlice.reducer;

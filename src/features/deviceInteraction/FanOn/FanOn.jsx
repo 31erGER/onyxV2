@@ -21,6 +21,7 @@ export default React.forwardRef((props, ref) => {
       className="heat-air-button"
     >
       <ToggleSwitch
+        controlled
         isToggleOn={props.isFanOn}
         onText={t("deviceControls.fanOn")}
         offText={<PrideTextWithDiv text={t("deviceControls.fanOff")} />}

@@ -46,7 +46,7 @@ const Caption = styled.span`
 `;
 
 const ToggleSwitch = React.forwardRef(function ToggleSwitch(
-  { isToggleOn = false, onChange = () => {}, onText = "On", offText = "Off" },
+  { controlled = false, isToggleOn = false, onChange = () => {}, onText = "On", offText = "Off" },
   ref
 ) {
   const [isOn, setIsOn] = useState(isToggleOn);
@@ -55,29 +55,30 @@ const ToggleSwitch = React.forwardRef(function ToggleSwitch(
     setIsOn(isToggleOn);
   }, [isToggleOn]);
 
-  const handleClick = () =>
-    setIsOn((oldIsOn) => {
-      const nextState = !oldIsOn;
-      onChange(nextState);
-      return nextState;
-    });
+  const shownOn = controlled ? isToggleOn : isOn;
+  const handleClick = () => {
+    const nextState = !shownOn;
+    if (!controlled) setIsOn(nextState);
+    onChange(nextState);
+  };
 
   return (
     <Wrapper
       ref={ref}
       onClick={handleClick}
       role="switch"
-      aria-checked={isOn}
+      aria-checked={shownOn}
     >
       <Track>
-        <Knob $on={isOn} />
+        <Knob $on={shownOn} />
       </Track>
-      <Caption $on={isOn}>{isOn ? onText : offText}</Caption>
+      <Caption $on={shownOn}>{shownOn ? onText : offText}</Caption>
     </Wrapper>
   );
 });
 
 ToggleSwitch.propTypes = {
+  controlled: PropTypes.bool,
   isToggleOn: PropTypes.bool,
   onChange: PropTypes.func,
   onText: PropTypes.node,

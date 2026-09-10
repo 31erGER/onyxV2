@@ -1,18 +1,15 @@
+import { queueAutoShutoff } from "../../../services/deviceCommands";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
-import { AddToPriorityQueue, AddToQueue } from "../../../services/bleQueueing";
-import {
-  convertToUInt8BLE,
-  convertBLEtoUint16,
-  convertToUInt16BLE,
-} from "../../../services/utils";
+import { AddToQueue } from "../../../services/bleQueueing";
+import { convertBLEtoUint16 } from "../../../services/utils";
 import { getCharacteristic } from "../../../services/BleCharacteristicCache";
-import { autoShutoffSettingUuid, heatOffUuid } from "../../../constants/uuids";
+import { autoShutoffSettingUuid } from "../../../constants/uuids";
 import { setAutoShutoffTime } from "../settingsSlice";
 import { useEffect, useState } from "react";
 import SettingsRange from "../Shared/SettingsRange/SettingsRange";
 import SettingsItem from "../SettingsItem";
-import { setIsHeatOn } from "../../deviceInteraction/deviceInteractionSlice";
+
 import { useTranslation } from "react-i18next";
 
 export default function AdjustAutoShutoffTimeContainer() {
@@ -21,8 +18,7 @@ export default function AdjustAutoShutoffTimeContainer() {
     (state) => state.settings.autoShutoffTime
   );
 
-  const isHeatOn = useSelector((state) => state.deviceInteraction.isHeatOn);
-  const [didAttemptTurnHeatOff, setDidAttemptTurnHeatOff] = useState(false);
+  const [draft, setDraft] = useState(undefined);
   const dispatch = useDispatch();
   useEffect(() => {
     if (autoShutoffTime === undefined) {
@@ -36,41 +32,8 @@ export default function AdjustAutoShutoffTimeContainer() {
     }
   }, [autoShutoffTime, dispatch]);
 
-  useEffect(() => {
-    setDidAttemptTurnHeatOff(false);
-  }, [isHeatOn]);
-  const onMouseUp = (e) => {
-    const blePayload = async () => {
-      const characteristic = getCharacteristic(autoShutoffSettingUuid);
-      const buffer = convertToUInt16BLE(e[0] * 60);
-      await characteristic.writeValue(buffer);
-
-      if (isHeatOn) {
-        const heatOffCharacteristic = getCharacteristic(heatOffUuid);
-        const heatOffBuffer = convertToUInt8BLE(0);
-        await heatOffCharacteristic.writeValue(heatOffBuffer);
-        setDidAttemptTurnHeatOff(true);
-      }
-    };
-    AddToPriorityQueue(blePayload);
-  };
-
-  const onChange = (e) => {
-    if (!didAttemptTurnHeatOff && isHeatOn) {
-      setDidAttemptTurnHeatOff(true);
-      const blePayload = async () => {
-        const heatOffCharacteristic = getCharacteristic(heatOffUuid);
-        const heatOffBuffer = convertToUInt8BLE(0);
-        await heatOffCharacteristic.writeValue(heatOffBuffer);
-        // Only report the heater as off once the device actually accepted the command.
-        // Reporting it early would show "off" in the UI while the device keeps heating.
-        dispatch(setIsHeatOn(false));
-      };
-      AddToPriorityQueue(blePayload);
-    }
-
-    dispatch(setAutoShutoffTime(e[0]));
-  };
+  const onMouseUp = (values) => queueAutoShutoff(values[0]);
+  const onChange = (values) => setDraft(values[0]);
 
   return (
     <SettingsItem
@@ -78,9 +41,9 @@ export default function AdjustAutoShutoffTimeContainer() {
       description={t('settings.items.autoShutoffTimer.description')}
     >
       <div>
-        Current Time: {autoShutoffTime} minutes
+        Current Time: {draft ?? autoShutoffTime} minutes
         <SettingsRange
-          values={[autoShutoffTime || 30]}
+          values={[draft ?? Math.min(360, Math.max(5, autoShutoffTime || 30))]}
           step={5}
           min={5}
           max={360}

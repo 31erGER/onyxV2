@@ -1,25 +1,18 @@
+import { beginTemperatureIntent, getTemperatureIntent, queueTemperature } from "../../../services/deviceCommands";
+import { getWorkflowGeneration } from "../../../services/bleQueueing";
 import { useEffect, useRef } from "react";
-import { getCharacteristic } from "../../../services/BleCharacteristicCache";
-import { writeTemperatureUuid, heatOnUuid } from "../../../constants/uuids";
-import {
-  convertToUInt32BLE,
-  convertToUInt8BLE,
-  convertCurrentTemperatureCharacteristicToCelcius,
-  isValueInValidVolcanoCelciusRange,
-} from "../../../services/utils";
+
+import { isValueInValidVolcanoCelciusRange } from "../../../services/utils";
 import PlusMinusButton from "./PlusMinusButton";
-import { AddToQueue, AddToPriorityQueue } from "../../../services/bleQueueing";
+
 import debounce from "lodash/debounce";
 import { temperatureIncrementedDecrementedDebounceTime } from "../../../constants/constants";
 import { useSelector } from "react-redux";
-import { setIsHeatOn, setTargetTemperature } from "../deviceInteractionSlice";
-import { useDispatch } from "react-redux";
+
 import WriteTemperature from "./WriteTemperature";
 import { getDisplayTemperature } from "../../../services/utils";
 import PrideText from "../../../themes/PrideText";
 import { useTranslation } from "react-i18next";
-
-import store from "../../../store";
 
 export default function WriteTemperatureContainer() {
   const { t } = useTranslation();
@@ -28,131 +21,31 @@ export default function WriteTemperatureContainer() {
   );
 
   const isF = useSelector((state) => state.settings.isF);
-  const isHeatOn = useSelector((state) => state.deviceInteraction.isHeatOn);
   const temperatureControlValues = useSelector(
     (state) => state.settings.config.temperatureControlValues
   );
 
-  const dispatch = useDispatch();
-  useEffect(() => {
-    const characteristic = getCharacteristic(writeTemperatureUuid);
-
-    function handleTargetTemperatureChanged(event) {
-      const targetTemperature =
-        convertCurrentTemperatureCharacteristicToCelcius(event.target.value);
-      if (
-        store.getState().deviceInteraction.targetTemperature !==
-        targetTemperature
-      ) {
-        dispatch(setTargetTemperature(targetTemperature));
-      }
-    }
-
-    const blePayload = async () => {
-      await characteristic.addEventListener(
-        "characteristicvaluechanged",
-        handleTargetTemperatureChanged
-      );
-
-      await characteristic.startNotifications();
-      const value = await characteristic.readValue();
-      const targetTemperature =
-        convertCurrentTemperatureCharacteristicToCelcius(value);
-      if (
-        store.getState().deviceInteraction.targetTemperature !==
-        targetTemperature
-      ) {
-        dispatch(setTargetTemperature(targetTemperature));
-      }
-    };
-    AddToQueue(blePayload);
-    return () => {
-      const blePayload = async () => {
-        await characteristic.removeEventListener(
-          "characteristicvaluechanged",
-          handleTargetTemperatureChanged
-        );
-      };
-      AddToQueue(blePayload);
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    const handler = () => {
-      if (document.visibilityState === "visible") {
-        setTimeout(() => {
-          const blePayload = async () => {
-            const characteristic = getCharacteristic(writeTemperatureUuid);
-            const value = await characteristic.readValue();
-            const targetTemperature =
-              convertCurrentTemperatureCharacteristicToCelcius(value);
-            if (
-              store.getState().deviceInteraction.targetTemperature !==
-              targetTemperature
-            ) {
-              dispatch(setTargetTemperature(targetTemperature));
-            }
-          };
-          AddToQueue(blePayload);
-        }, 250);
-      }
-    };
-    document.addEventListener("visibilitychange", handler);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handler);
-    };
-  }, [dispatch]);
-
-  // we have to use refs for debounce to work properly in react functional components
-  const onTemperatureIncrementDecrementDebounceRef = useRef(
-    debounce((newTemp, disableAutoHeatOn) => {
-      onClick(newTemp, disableAutoHeatOn)();
-    }, temperatureIncrementedDecrementedDebounceTime)
-  );
+  const pendingTemperature = useRef(null);
+  const pendingIntent = useRef(null);
+  const debounceRef = useRef(debounce((value, generation, intent) => {
+    pendingTemperature.current = null;
+    queueTemperature(value, generation, intent);
+  }, temperatureIncrementedDecrementedDebounceTime));
+  useEffect(() => () => debounceRef.current.cancel(), []);
 
   const onClickIncrement = (incrementValue) => () => {
-    if (!isHeatOn) {
-      const blePayload = async () => {
-        let characteristic, buffer;
-        characteristic = getCharacteristic(heatOnUuid);
-        buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsHeatOn(true));
-      };
-      AddToPriorityQueue(blePayload);
-    }
-    const nextTemp = targetTemperature + incrementValue;
-    if (!isValueInValidVolcanoCelciusRange(nextTemp)) {
-      return;
-    }
-    dispatch(setTargetTemperature(nextTemp));
-    onTemperatureIncrementDecrementDebounceRef.current(nextTemp, true);
+    if (pendingIntent.current !== getTemperatureIntent()) pendingTemperature.current = null;
+    const nextTemp = (pendingTemperature.current ?? targetTemperature) + incrementValue;
+    if (!isValueInValidVolcanoCelciusRange(nextTemp)) return;
+    pendingTemperature.current = nextTemp;
+    pendingIntent.current = beginTemperatureIntent();
+    debounceRef.current(nextTemp, getWorkflowGeneration(), pendingIntent.current);
   };
 
-  const onClick = (value, disableAutoHeatOn) => () => {
-    if (!isValueInValidVolcanoCelciusRange(value)) {
-      return;
-    }
-
-    const blePayload = async () => {
-      let characteristic, buffer;
-
-      if (targetTemperature !== value) {
-        characteristic = getCharacteristic(writeTemperatureUuid);
-        buffer = convertToUInt32BLE(value * 10);
-        await characteristic.writeValue(buffer);
-        dispatch(setTargetTemperature(value));
-      }
-
-      if (!isHeatOn && !disableAutoHeatOn) {
-        characteristic = getCharacteristic(heatOnUuid);
-        buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsHeatOn(true));
-      }
-    };
-    AddToPriorityQueue(blePayload);
+  const onClick = (value) => () => {
+    debounceRef.current.cancel();
+    pendingTemperature.current = null;
+    queueTemperature(value);
   };
 
   const temperatureButtons = temperatureControlValues.map((item, index) => {

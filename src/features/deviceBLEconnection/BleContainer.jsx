@@ -4,15 +4,13 @@ import Ble from "../../services/bluetooth";
 import Loading from "./LoadingConnection";
 import { clearCache } from "../../services/BleCharacteristicCache";
 import { useState, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { RE_INITIALIZE_STORE } from "../../constants/actions";
+
 import { clearQueuesAndTimers } from "../../services/bleQueueing";
 
 export default function BleContainer() {
   const [isBleConnectionBeingEstablished, setIsBleConnectionBeingEstablished] =
     useState(false);
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const onDisconnected = () => {
     clearCache();
@@ -32,8 +30,9 @@ export default function BleContainer() {
 
     try {
       isOnclickInProgressRef.current = true;
-      await Ble(onConnected, onDisconnected);
-      dispatch(RE_INITIALIZE_STORE());
+      setIsBleConnectionBeingEstablished(true);
+      const connected = await Ble(onConnected, onDisconnected);
+      if (!connected) { setIsBleConnectionBeingEstablished(false); return; }
       navigate("/Volcano/App");
     } catch (error) {
       setIsBleConnectionBeingEstablished(false);

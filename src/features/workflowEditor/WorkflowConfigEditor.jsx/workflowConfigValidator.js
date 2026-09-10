@@ -1,7 +1,9 @@
 import workflowItemValidor from "../shared/WorkflowItemValidator";
+import { isValidWorkflowDuration } from "../../../services/utils";
 
-export default function WorkflowConfigValidator(workflowConfig, isF) {
-  if (!Array.isArray(workflowConfig.items)) {
+export default function WorkflowConfigValidator(workflowConfig) {
+  if (!Array.isArray(workflowConfig?.items) ||
+      !isValidWorkflowDuration(workflowConfig.fanOnGlobal)) {
     return false;
   }
 
@@ -18,7 +20,12 @@ export default function WorkflowConfigValidator(workflowConfig, isF) {
 
       if (
         currentWorkflow.payload.some((item) => {
-          if (!workflowItemValidor(item, isF)) {
+          if (typeof item?.payload !== "number" &&
+              ["wait", "fanOn", "exitWorkflowWhenTargetTemperatureIs", "setLEDbrightness"].includes(item?.type)) return true;
+          if (item?.type === "heatOn" && item.payload !== "" && item.payload !== null &&
+              typeof item.payload !== "number") return true;
+          // JSON always stores Celsius; only the interactive editor uses isF.
+          if (!workflowItemValidor(item, false)) {
             return true;
           }
           return false;

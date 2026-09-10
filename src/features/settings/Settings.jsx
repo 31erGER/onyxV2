@@ -2,7 +2,6 @@ import TemperatureControlSettings from "./TemperatureControlValues/TemperatureCo
 import Div from "../shared/styledComponents/RootNonAppOutletDiv";
 import AppearanceSettings from "./Appearance/AppearanceSettings";
 import PrideText from "../../themes/PrideText";
-import TurnHeatOnWhenConnectionIsEstablished from "./TurnHeatOnWhenConnectionIsEstablished/TurnHeatOnWhenConnectionIsEstablished";
 import HighlightLastRunWorkflow from "./HighlightLastRunWorkflow/HighlightLastRunWorkflow";
 import PWAInstall, { usePWAInstallAvailable } from "./InstallPWA/PWAInstall";
 import SettingsSection from "./SettingsSection";
@@ -34,7 +33,6 @@ export default function Settings() {
         description={t("settings.behavior.description")}
       >
         <LanguageSelector />
-        <TurnHeatOnWhenConnectionIsEstablished />
         <HighlightLastRunWorkflow />
         <TemperatureControlSettings />
         <MinimalistModeToggle />

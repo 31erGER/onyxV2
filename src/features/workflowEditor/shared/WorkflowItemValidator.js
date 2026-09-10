@@ -3,6 +3,7 @@ import {
   convertToCelsiusFromFahrenheit,
   isValueInValidVolcanoCelciusRange,
   convertToFahrenheitFromCelsius,
+  isValidWorkflowDuration,
 } from "../../../services/utils";
 import {
   MAX_CELSIUS_TEMP,
@@ -11,11 +12,12 @@ import {
 
 const workflowItemValidor = ({ payload, type }, isF, onError = () => {}) => {
   try {
-    const parsedPayloadInput = parseFloat(payload);
+    const parsedPayloadInput = typeof payload === "number" ||
+      (typeof payload === "string" && payload.trim() !== "") ? Number(payload) : NaN;
     switch (type) {
       case WorkflowItemTypes.WAIT: {
         const isPayloadValid =
-          !isNaN(parsedPayloadInput) && parsedPayloadInput >= 0;
+          isValidWorkflowDuration(parsedPayloadInput);
         if (!isPayloadValid) {
           onError("Value must be greater than or eqaul to 0");
         }
@@ -24,7 +26,7 @@ const workflowItemValidor = ({ payload, type }, isF, onError = () => {}) => {
       case WorkflowItemTypes.FAN_ON_GLOBAL:
       case WorkflowItemTypes.FAN_ON: {
         const isPayloadValid =
-          !isNaN(parsedPayloadInput) && parsedPayloadInput >= 0;
+          isValidWorkflowDuration(parsedPayloadInput);
         if (!isPayloadValid) {
           onError("Value must be a number and greater than 0");
         }
@@ -130,8 +132,8 @@ const workflowItemValidor = ({ payload, type }, isF, onError = () => {}) => {
 
         // Validate default wait (optional)
         if (payload.default.wait !== undefined && payload.default.wait !== null) {
-          const defaultWait = parseFloat(payload.default.wait);
-          if (isNaN(defaultWait) || defaultWait < 0) {
+          const defaultWait = payload.default.wait;
+          if (!isValidWorkflowDuration(defaultWait)) {
             onError("Default wait must be >= 0");
             return false;
           }
@@ -192,8 +194,8 @@ const workflowItemValidor = ({ payload, type }, isF, onError = () => {}) => {
 
           // Validate wait (optional)
           if (condition.wait !== undefined && condition.wait !== null) {
-            const wait = parseFloat(condition.wait);
-            if (isNaN(wait) || wait < 0) {
+            const wait = condition.wait;
+            if (!isValidWorkflowDuration(wait)) {
               onError(`Condition ${i + 1}: Wait must be >= 0`);
               return false;
             }

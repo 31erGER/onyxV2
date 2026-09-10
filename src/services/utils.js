@@ -20,6 +20,7 @@ import { migrateLegacyConfig } from "./configMigration";
 export const SUPPORTED_LANGUAGES = ['en', 'fr', 'es', 'de', 'pl', 'binary', 'elvish'];
 
 export function convertToUInt8BLE(val) {
+  assertUnsignedValue(val, 255);
   const buffer = new ArrayBuffer(1);
   const dataView = new DataView(buffer);
   dataView.setUint8(0, val % 256);
@@ -31,9 +32,8 @@ export function convertBLEtoUint16(bleBuf) {
 }
 
 export function convertToUInt16BLE(val) {
-  // Without this clamp a value of 65536 wraps silently to 0. For the auto shutoff
-  // setting that would mean writing "no shutoff" to the device.
-  const safeValue = Math.min(Math.max(Math.round(val) || 0, 0), 65535);
+  assertUnsignedValue(val, 65535);
+  const safeValue = Math.round(val);
   const buffer = new ArrayBuffer(2);
   const dataView = new DataView(buffer);
   dataView.setUint8(0, safeValue % 256);
@@ -43,6 +43,8 @@ export function convertToUInt16BLE(val) {
 }
 
 export function convertToUInt32BLE(val) {
+  assertUnsignedValue(val, 4294967295);
+  val = Math.round(val);
   const buffer = new ArrayBuffer(4);
   const dataView = new DataView(buffer);
   dataView.setUint8(0, val & 255);
@@ -56,6 +58,17 @@ export function convertToUInt32BLE(val) {
   return buffer;
 }
 
+function assertUnsignedValue(value, maximum) {
+  if (!Number.isFinite(value) || value < 0 || value > maximum) {
+    throw new RangeError("Invalid unsigned Bluetooth value");
+  }
+}
+
+// Application limit, not a hardware guarantee. Also avoids setTimeout overflow.
+export function isValidWorkflowDuration(value) {
+  return Number.isFinite(value) && value >= 0 && value <= 6 * 60 * 60;
+}
+
 export function convertToggleCharacteristicToBool(value, mask) {
   if ((value & mask) === 0) {
     return false;
@@ -63,10 +76,8 @@ export function convertToggleCharacteristicToBool(value, mask) {
   return true;
 }
 
-// Returns null when the device reported a value that cannot be a real temperature.
-// Reporting an unusable reading as a low temperature would be dangerous: the heat
-// watchdog reads it as "still cold" and keeps heating. Callers must keep their last
-// known good value instead of trusting a null.
+// Invalid sensor data is not a cold reading. Device telemetry must abort automatic
+// control when this returns null; a retained display value is not fresh evidence.
 export function convertCurrentTemperatureCharacteristicToCelcius(value) {
   const result = Math.round(convertBLEtoUint16(value) / 10);
 
@@ -79,9 +90,8 @@ export function convertCurrentTemperatureCharacteristicToCelcius(value) {
     return null;
   }
 
-  // Anything above the highest settable target is passed through unchanged rather than
-  // smoothed away. A genuine overshoot has to stay visible: it satisfies the "target
-  // reached" check and therefore stops the heating instead of prolonging it.
+  // Preserve measured overshoot for display and target-reached checks. Reaching
+  // a target completes the step; it is not proof that the heater switched off.
   return result;
 }
 
@@ -103,7 +113,7 @@ export function getDisplayTemperature(temperature, isF) {
 }
 
 export function isValueInValidVolcanoCelciusRange(value) {
-  if (isNaN(value)) {
+  if (!Number.isFinite(value)) {
     return false;
   }
 

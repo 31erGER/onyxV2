@@ -1,3 +1,5 @@
+import { beginTemperatureIntent, getTemperatureIntent, queueTemperature, queueHeat, queueFan } from "../../services/deviceCommands";
+import { getWorkflowGeneration } from "../../services/bleQueueing";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsMinimalistMode } from "../settings/settingsSlice";
 import styled, { keyframes, css } from "styled-components";
@@ -11,63 +13,27 @@ import WorkflowEditorIcon from "./OutletRenderer/icons/WorkflowEditorIcon";
 import WorkFlow from "../workflowEditor/WorkflowButtons";
 import CurrentWorkflowExecutionDisplay from "../deviceInteraction/CurrentWorkflowExecutionDisplay.jsx/CurrentWorkflowExecutionDisplay";
 import { useTranslation } from "react-i18next";
-import {
-  setIsHeatOn,
-  setIsFanOn,
-} from "../deviceInteraction/deviceInteractionSlice";
+
 import { setAutoOffTimeInSeconds } from "../deviceInformation/deviceInformationSlice";
 import {
   getCharacteristic,
   clearCache,
 } from "../../services/BleCharacteristicCache";
-import {
-  heatOnUuid,
-  heatOffUuid,
-  fanOnUuid,
-  fanOffUuid,
-  bleDeviceUuid,
-  writeTemperatureUuid,
-  currentTemperatureUuid,
-  register1Uuid,
-  register2Uuid,
-  autoShutoffUuid,
-  autoShutoffSettingUuid,
-} from "../../constants/uuids";
+import { bleDeviceUuid, register2Uuid, autoShutoffUuid, autoShutoffSettingUuid } from "../../constants/uuids";
 import { useNavigate } from "react-router-dom";
 import FanIcon from "./OutletRenderer/icons/FanIcon";
 import BluetoothDisconnectIcon from "./OutletRenderer/icons/BluetoothDisconnectIcon";
 import ControlsIcon from "./OutletRenderer/icons/ControlsIcon";
 import MenuBarIcon from "./OutletRenderer/icons/MenuBarIcon";
 // import PlusMinusButton from "../deviceInteraction/WriteTemperature/PlusMinusButton";
-import {
-  convertToUInt32BLE,
-  convertToUInt8BLE,
-  isValueInValidVolcanoCelciusRange,
-  convertToFahrenheitFromCelsius,
-  convertToCelsiusFromFahrenheit,
-  convertCurrentTemperatureCharacteristicToCelcius,
-  convertBLEtoUint16,
-  convertToggleCharacteristicToBool,
-} from "../../services/utils";
-import {
-  AddToPriorityQueue,
-  AddToQueue,
-  cancelCurrentWorkflow,
-} from "../../services/bleQueueing";
-import {
-  setTargetTemperature,
-  setCurrentTemperature,
-} from "../deviceInteraction/deviceInteractionSlice";
+import { convertToUInt32BLE, isValueInValidVolcanoCelciusRange, convertToFahrenheitFromCelsius, convertBLEtoUint16 } from "../../services/utils";
+import { AddToQueue, cancelCurrentWorkflow } from "../../services/bleQueueing";
+
 import { setIsF, setAutoShutoffTime } from "../settings/settingsSlice";
 import debounce from "lodash/debounce";
 import { temperatureIncrementedDecrementedDebounceTime } from "../../constants/constants";
 import { DEGREE_SYMBOL } from "../../constants/temperature";
-import {
-  heatingMask,
-  fanMask,
-  fahrenheitMask,
-  celciusMask,
-} from "../../constants/masks";
+import { fahrenheitMask, celciusMask } from "../../constants/masks";
 import store from "../../store";
 import TemperatureDial from "../deviceInteraction/TemperatureDial/TemperatureDial";
 import WorkflowItemTypes from "../../constants/enums";
@@ -965,318 +931,6 @@ export default function MinimalistLayout() {
   const [lastStepId, setLastStepId] = useState(null);
   const [wasWaitingLocal, setWasWaitingLocal] = useState(false);
 
-  // Current temperature BLE handler
-  useEffect(() => {
-    const BlePayload = async () => {
-      try {
-        const characteristic = getCharacteristic(currentTemperatureUuid);
-        if (!characteristic) {
-          console.warn(
-            "Current temperature characteristic not found in minimalist mode"
-          );
-          return;
-        }
-
-        const onCharacteristicChange = (event) => {
-          const currentTemperature =
-            convertCurrentTemperatureCharacteristicToCelcius(
-              event.target.value
-            );
-          if (
-            store.getState().deviceInteraction.currentTemperature !==
-            currentTemperature
-          ) {
-            dispatch(setCurrentTemperature(currentTemperature));
-          }
-        };
-
-        await characteristic.addEventListener(
-          "characteristicvaluechanged",
-          onCharacteristicChange
-        );
-        await characteristic.startNotifications();
-        const value = await characteristic.readValue();
-        const normalizedValue =
-          convertCurrentTemperatureCharacteristicToCelcius(value);
-
-        if (
-          store.getState().deviceInteraction.currentTemperature !==
-          normalizedValue
-        ) {
-          dispatch(setCurrentTemperature(normalizedValue));
-        }
-
-        // Store cleanup function
-        return async () => {
-          await characteristic?.removeEventListener(
-            "characteristicvaluechanged",
-            onCharacteristicChange
-          );
-        };
-      } catch (error) {
-        console.error(
-          "Error setting up current temperature BLE handler in minimalist mode:",
-          error
-        );
-        navigate("/device");
-      }
-    };
-
-    AddToQueue(BlePayload);
-  }, [dispatch, navigate]);
-
-  // Target temperature BLE handler
-  useEffect(() => {
-    const blePayload = async () => {
-      try {
-        const characteristic = getCharacteristic(writeTemperatureUuid);
-        if (!characteristic) {
-          console.warn(
-            "Target temperature characteristic not found in minimalist mode"
-          );
-          return;
-        }
-
-        const handleTargetTemperatureChanged = (event) => {
-          const targetTemperature =
-            convertCurrentTemperatureCharacteristicToCelcius(
-              event.target.value
-            );
-          if (
-            store.getState().deviceInteraction.targetTemperature !==
-            targetTemperature
-          ) {
-            dispatch(setTargetTemperature(targetTemperature));
-          }
-        };
-
-        await characteristic.addEventListener(
-          "characteristicvaluechanged",
-          handleTargetTemperatureChanged
-        );
-
-        await characteristic.startNotifications();
-        const value = await characteristic.readValue();
-        const targetTemperature =
-          convertCurrentTemperatureCharacteristicToCelcius(value);
-        if (
-          store.getState().deviceInteraction.targetTemperature !==
-          targetTemperature
-        ) {
-          dispatch(setTargetTemperature(targetTemperature));
-        }
-
-        // Store cleanup function
-        return async () => {
-          await characteristic?.removeEventListener(
-            "characteristicvaluechanged",
-            handleTargetTemperatureChanged
-          );
-        };
-      } catch (error) {
-        console.error(
-          "Error setting up target temperature BLE handler in minimalist mode:",
-          error
-        );
-        navigate("/device");
-      }
-    };
-    AddToQueue(blePayload);
-  }, [dispatch, navigate]);
-
-  // Visibility change handlers for both temperatures
-  useEffect(() => {
-    const handler = () => {
-      if (document.visibilityState === "visible") {
-        setTimeout(() => {
-          // Current temperature
-          const currentTempPayload = async () => {
-            try {
-              const characteristic = getCharacteristic(currentTemperatureUuid);
-              if (!characteristic) return;
-              const value = await characteristic.readValue();
-              const normalizedValue =
-                convertCurrentTemperatureCharacteristicToCelcius(value);
-              if (
-                store.getState().deviceInteraction.currentTemperature !==
-                normalizedValue
-              ) {
-                dispatch(setCurrentTemperature(normalizedValue));
-              }
-            } catch (error) {
-              console.error(
-                "Error reading current temperature on visibility change:",
-                error
-              );
-              navigate("/device");
-            }
-          };
-          AddToQueue(currentTempPayload);
-
-          // Target temperature
-          const targetTempPayload = async () => {
-            try {
-              const characteristic = getCharacteristic(writeTemperatureUuid);
-              if (!characteristic) return;
-              const value = await characteristic.readValue();
-              const targetTemperature =
-                convertCurrentTemperatureCharacteristicToCelcius(value);
-              if (
-                store.getState().deviceInteraction.targetTemperature !==
-                targetTemperature
-              ) {
-                dispatch(setTargetTemperature(targetTemperature));
-              }
-            } catch (error) {
-              console.error(
-                "Error reading target temperature on visibility change:",
-                error
-              );
-              navigate("/device");
-            }
-          };
-          AddToQueue(targetTempPayload);
-        }, 250);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handler);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handler);
-    };
-  }, [dispatch, navigate]);
-
-  // Heat and Fan status BLE handler (register1Uuid)
-  useEffect(() => {
-    const blePayload = async () => {
-      try {
-        const characteristic = getCharacteristic(register1Uuid);
-        if (!characteristic) {
-          console.warn("Register1 characteristic not found in minimalist mode");
-          return;
-        }
-
-        const onRegister1Change = (event) => {
-          const currentVal = convertBLEtoUint16(event.target.value);
-          const newHeatValue = convertToggleCharacteristicToBool(
-            currentVal,
-            heatingMask
-          );
-          const newFanValue = convertToggleCharacteristicToBool(
-            currentVal,
-            fanMask
-          );
-
-          if (store.getState().deviceInteraction.isHeatOn !== newHeatValue) {
-            dispatch(setIsHeatOn(newHeatValue));
-          }
-          if (store.getState().deviceInteraction.isFanOn !== newFanValue) {
-            dispatch(setIsFanOn(newFanValue));
-          }
-        };
-
-        await characteristic.addEventListener(
-          "characteristicvaluechanged",
-          onRegister1Change
-        );
-        await characteristic.startNotifications();
-
-        // Initial read
-        const value = await characteristic.readValue();
-        const currentVal = convertBLEtoUint16(value);
-        const newHeatValue = convertToggleCharacteristicToBool(
-          currentVal,
-          heatingMask
-        );
-        const newFanValue = convertToggleCharacteristicToBool(
-          currentVal,
-          fanMask
-        );
-
-        if (store.getState().deviceInteraction.isHeatOn !== newHeatValue) {
-          dispatch(setIsHeatOn(newHeatValue));
-        }
-        if (store.getState().deviceInteraction.isFanOn !== newFanValue) {
-          dispatch(setIsFanOn(newFanValue));
-        }
-
-        // Store cleanup function
-        return async () => {
-          await characteristic?.removeEventListener(
-            "characteristicvaluechanged",
-            onRegister1Change
-          );
-        };
-      } catch (error) {
-        console.error(
-          "Error setting up heat/fan status BLE handler in minimalist mode:",
-          error
-        );
-        navigate("/device");
-      }
-    };
-    AddToQueue(blePayload);
-  }, [dispatch, navigate]);
-
-  // Temperature unit (Celsius/Fahrenheit) BLE handler (register2Uuid)
-  useEffect(() => {
-    const blePayload = async () => {
-      try {
-        const characteristic = getCharacteristic(register2Uuid);
-        if (!characteristic) {
-          console.warn("Register2 characteristic not found in minimalist mode");
-          return;
-        }
-
-        const onRegister2Change = (event) => {
-          const convertedValue = convertBLEtoUint16(event.target.value);
-          const isFValue = convertToggleCharacteristicToBool(
-            convertedValue,
-            fahrenheitMask
-          );
-
-          if (store.getState().settings.isF !== isFValue) {
-            dispatch(setIsF(isFValue));
-          }
-        };
-
-        await characteristic.addEventListener(
-          "characteristicvaluechanged",
-          onRegister2Change
-        );
-        await characteristic.startNotifications();
-
-        // Initial read
-        const value = await characteristic.readValue();
-        const convertedValue = convertBLEtoUint16(value);
-        const isFValue = convertToggleCharacteristicToBool(
-          convertedValue,
-          fahrenheitMask
-        );
-
-        if (store.getState().settings.isF !== isFValue) {
-          dispatch(setIsF(isFValue));
-        }
-
-        // Store cleanup function
-        return async () => {
-          await characteristic?.removeEventListener(
-            "characteristicvaluechanged",
-            onRegister2Change
-          );
-        };
-      } catch (error) {
-        console.error(
-          "Error setting up temperature unit BLE handler in minimalist mode:",
-          error
-        );
-        navigate("/device");
-      }
-    };
-    AddToQueue(blePayload);
-  }, [dispatch, navigate]);
-
   // Auto-shutoff monitoring
   useEffect(() => {
     const intervalFunction = () => {
@@ -1418,113 +1072,28 @@ export default function MinimalistLayout() {
     wasWaitingLocal,
   ]);
 
-  // Temperature increment/decrement functionality (copied from WriteTemperatureContainer)
-  const onTemperatureIncrementDecrementDebounceRef = useRef(
-    debounce((newTemp, disableAutoHeatOn) => {
-      onTemperatureClick(newTemp, disableAutoHeatOn)();
-    }, temperatureIncrementedDecrementedDebounceTime)
-  );
+  const pendingTemperature = useRef(null);
+  const pendingIntent = useRef(null);
+  const debounceRef = useRef(debounce((value, generation, intent) => {
+    pendingTemperature.current = null;
+    queueTemperature(value, generation, intent);
+  }, temperatureIncrementedDecrementedDebounceTime));
+  useEffect(() => () => debounceRef.current.cancel(), []);
 
-  const onTemperatureClick = (value, disableAutoHeatOn) => () => {
-    if (!isValueInValidVolcanoCelciusRange(value)) {
-      return;
-    }
-
-    const blePayload = async () => {
-      try {
-        let characteristic, buffer;
-
-        if (targetTemperature !== value) {
-          characteristic = getCharacteristic(writeTemperatureUuid);
-          if (!characteristic) {
-            console.error(
-              "Temperature characteristic not found - redirecting to home"
-            );
-            navigate("/device");
-            return;
-          }
-          buffer = convertToUInt32BLE(value * 10);
-          await characteristic.writeValue(buffer);
-          dispatch(setTargetTemperature(value));
-        }
-
-        if (!isHeatOn && !disableAutoHeatOn) {
-          characteristic = getCharacteristic(heatOnUuid);
-          if (!characteristic) {
-            console.error(
-              "Heat characteristic not found - redirecting to home"
-            );
-            navigate("/device");
-            return;
-          }
-          buffer = convertToUInt8BLE(0);
-          await characteristic.writeValue(buffer);
-          dispatch(setIsHeatOn(true));
-        }
-      } catch (error) {
-        console.error("Error setting temperature in minimalist mode:", error);
-        navigate("/device");
-      }
-    };
-    AddToPriorityQueue(blePayload);
+  const onTemperatureClick = (value) => () => {
+    debounceRef.current.cancel();
+    pendingTemperature.current = null;
+    queueTemperature(value);
   };
-
   const onTemperatureIncrement = (incrementValue) => () => {
-    if (!isHeatOn) {
-      const blePayload = async () => {
-        try {
-          let characteristic, buffer;
-          characteristic = getCharacteristic(heatOnUuid);
-          if (!characteristic) {
-            console.error(
-              "Heat characteristic not found - redirecting to home"
-            );
-            navigate("/device");
-            return;
-          }
-          buffer = convertToUInt8BLE(0);
-          await characteristic.writeValue(buffer);
-          dispatch(setIsHeatOn(true));
-        } catch (error) {
-          console.error("Error turning on heat in minimalist mode:", error);
-          navigate("/device");
-        }
-      };
-      AddToPriorityQueue(blePayload);
-    }
-    const nextTemp = targetTemperature + incrementValue;
-    if (!isValueInValidVolcanoCelciusRange(nextTemp)) {
-      return;
-    }
-    dispatch(setTargetTemperature(nextTemp));
-    onTemperatureIncrementDecrementDebounceRef.current(nextTemp, true);
+    if (pendingIntent.current !== getTemperatureIntent()) pendingTemperature.current = null;
+    const nextTemp = (pendingTemperature.current ?? targetTemperature) + incrementValue;
+    if (!isValueInValidVolcanoCelciusRange(nextTemp)) return;
+    pendingTemperature.current = nextTemp;
+    pendingIntent.current = beginTemperatureIntent();
+    debounceRef.current(nextTemp, getWorkflowGeneration(), pendingIntent.current);
   };
-
-  // Temperature dial commit handler (same BLE pattern as TemperatureDialContainer)
-  const onDialTargetCommit = (celsius) => {
-    // The dial geometry already clamps to the valid range, but never write a
-    // temperature to the device without checking it here as well.
-    if (!isValueInValidVolcanoCelciusRange(celsius)) {
-      return;
-    }
-    dispatch(setTargetTemperature(celsius));
-    const blePayload = async () => {
-      const characteristic = getCharacteristic(writeTemperatureUuid);
-      const buffer = convertToUInt32BLE(celsius * 10);
-      await characteristic.writeValue(buffer);
-    };
-    AddToQueue(blePayload);
-
-    if (!isHeatOn) {
-      const heatPayload = async () => {
-        const characteristic = getCharacteristic(heatOnUuid);
-        const buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsHeatOn(true));
-      };
-      AddToPriorityQueue(heatPayload);
-    }
-  };
+  const onDialTargetCommit = (celsius) => onTemperatureClick(celsius)();
 
   const handleNavigationToggle = () => {
     setShowNavigation(!showNavigation);
@@ -1566,47 +1135,8 @@ export default function MinimalistLayout() {
     }
   };
 
-  const handleHeatClick = () => {
-    const blePayload = async () => {
-      try {
-        const uuid = isHeatOn ? heatOffUuid : heatOnUuid;
-        const characteristic = getCharacteristic(uuid);
-        if (!characteristic) {
-          console.error("Heat characteristic not found - redirecting to home");
-          navigate("/device");
-          return;
-        }
-        const buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsHeatOn(!isHeatOn));
-      } catch (error) {
-        console.error("Error controlling heat in minimalist mode:", error);
-        navigate("/device");
-      }
-    };
-    AddToPriorityQueue(blePayload);
-  };
-
-  const handleFanClick = useCallback(() => {
-    const blePayload = async () => {
-      try {
-        const uuid = isFanOn ? fanOffUuid : fanOnUuid;
-        const characteristic = getCharacteristic(uuid);
-        if (!characteristic) {
-          console.error("Fan characteristic not found - redirecting to home");
-          navigate("/device");
-          return;
-        }
-        const buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsFanOn(!isFanOn));
-      } catch (error) {
-        console.error("Error controlling fan in minimalist mode:", error);
-        navigate("/device");
-      }
-    };
-    AddToPriorityQueue(blePayload);
-  }, [isFanOn, navigate, dispatch]);
+  const handleHeatClick = () => queueHeat(!isHeatOn);
+  const handleFanClick = useCallback(() => queueFan(!isFanOn), [isFanOn]);
 
   // Spacebar fan toggle functionality
   useEffect(() => {

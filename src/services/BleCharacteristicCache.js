@@ -10,7 +10,7 @@ export function cacheContainsCharacteristic(characteristicId) {
 }
 
 export function isDeviceConnected() {
-  return cacheContainsCharacteristic(uuIds.bleDeviceUuid);
+  return cache[uuIds.bleDeviceUuid]?.gatt?.connected === true;
 }
 
 export function clearCache() {
@@ -25,11 +25,9 @@ export function getCharacteristic(characteristicId) {
   return characteristic;
 }
 
-function writeCharacteristicToCache(characteristic, characteristicId) {
-  cache[characteristicId] = characteristic;
-}
-
 export async function buildCacheFromBleDevice(bleDevice, gattRetryCount = 0) {
+  const candidate = {};
+  const writeCharacteristicToCache = (characteristic, id) => { candidate[id] = characteristic; };
   try {
     clearCache();
     writeCharacteristicToCache(bleDevice, uuIds.bleDeviceUuid);
@@ -185,8 +183,12 @@ export async function buildCacheFromBleDevice(bleDevice, gattRetryCount = 0) {
       uuIds.autoShutoffSettingUuid
     );
 
+    if (!bleDevice.gatt.connected) throw new Error("Disconnected during initialization");
+    cache = candidate;
     return "Cache Built!";
   } catch (error) {
+    clearCache();
+    bleDevice.gatt.disconnect();
     console.warn(error);
     console.warn(
       `Error while building BLE caching on attempt #${
@@ -194,8 +196,7 @@ export async function buildCacheFromBleDevice(bleDevice, gattRetryCount = 0) {
       }... Trying to establish cache again`
     );
     if (gattRetryCount < 3) {
-      await bleDevice.gatt.disconnect();
-      await buildCacheFromBleDevice(bleDevice, gattRetryCount + 1);
+      return await buildCacheFromBleDevice(bleDevice, gattRetryCount + 1);
     } else {
       throw new Error(
         `Could not establish Ble connection after ${

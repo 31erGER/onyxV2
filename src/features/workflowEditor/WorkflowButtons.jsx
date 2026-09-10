@@ -1,3 +1,4 @@
+import { isWorkflowRuntimeCurrent } from "../../services/workflowRuntime";
 import {
   heatOnUuid,
   fanOnUuid,
@@ -6,6 +7,7 @@ import {
   writeTemperatureUuid,
   LEDbrightnessUuid,
   currentTemperatureUuid,
+  register1Uuid,
 } from "../../constants/uuids";
 import WriteTemperature from "../deviceInteraction/WriteTemperature/WriteTemperature";
 
@@ -15,9 +17,10 @@ import {
   convertToUInt16BLE,
   isValueInValidVolcanoCelciusRange,
   convertCurrentTemperatureCharacteristicToCelcius,
+  convertBLEtoUint16,
 } from "../../services/utils";
 import {
-  AddToQueue,
+  AddToWorkflowCommand,
   AddToPriorityQueue,
   AddToWorkflowQueue,
   getWorkflowGeneration,
@@ -25,7 +28,6 @@ import {
 import {
   heatWatchdogPollIntervalInMilliseconds,
   heatWatchdogTimeoutInMilliseconds,
-  maxHeatOnResendAttempts,
   heatOnConfirmationGraceInMilliseconds,
 } from "../../constants/constants";
 import {
@@ -33,6 +35,8 @@ import {
   setIsHeatOn,
   setTargetTemperature,
 } from "../deviceInteraction/deviceInteractionSlice";
+import { heatingMask } from "../../constants/masks";
+import WorkflowConfigValidator from "./WorkflowConfigEditor.jsx/workflowConfigValidator";
 import WorkflowItemTypes from "../../constants/enums";
 import { getCharacteristic } from "../../services/BleCharacteristicCache";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,6 +49,7 @@ import {
   cancelCurrentWorkflow,
   clearIntervals,
   clearTimeouts,
+  pauseWorkflow,
 } from "../../services/bleQueueing";
 import PrideText from "../../themes/PrideText";
 import { useTranslation } from "react-i18next";
@@ -70,22 +75,25 @@ export default function WorkFlow() {
   );
 
   const executeWithManagedSetTimeout = (func, timeout = 100) => {
+    const generation = getWorkflowGeneration();
     currentSetTimeouts.push(
       setTimeout(() => {
+        if (generation !== getWorkflowGeneration() || !isWorkflowRuntimeCurrent()) return;
         func();
       }, timeout)
     );
   };
 
   const turnFanOff = async (next) => {
+    const generation = getWorkflowGeneration();
     const blePayload = async () => {
       const characteristic = getCharacteristic(fanOffUuid);
       const buffer = convertToUInt8BLE(0);
       await characteristic.writeValue(buffer);
-
+      if (generation !== getWorkflowGeneration()) return;
       executeWithManagedSetTimeout(next);
     };
-    AddToQueue(blePayload);
+    AddToWorkflowCommand(blePayload);
   };
 
   // isStillWanted is re-checked at write time, not at queue time. A heat-on that was
@@ -99,18 +107,7 @@ export default function WorkFlow() {
       const buffer = convertToUInt8BLE(0);
       await characteristic.writeValue(buffer);
     };
-    AddToQueue(blePayload);
-  };
-
-  // Emergency stop - jumps the queue so a backlog of heat steps cannot delay it.
-  const turnHeatOffImmediately = () => {
-    const blePayload = async () => {
-      const characteristic = getCharacteristic(heatOffUuid);
-      const buffer = convertToUInt8BLE(0);
-      await characteristic.writeValue(buffer);
-      dispatch(setIsHeatOn(false));
-    };
-    AddToPriorityQueue(blePayload);
+    AddToWorkflowCommand(blePayload);
   };
 
   const writeTargetTemperatureToDevice = (temperature) => {
@@ -123,144 +120,81 @@ export default function WorkFlow() {
       }
     };
 
-    AddToQueue(blePayload);
+    AddToWorkflowCommand(blePayload);
   };
 
-  // Polls until the device reports it reached targetTemperature, keeping the heater on
-  // in the meantime. targetTemperature must already be a valid celcius value - a step
-  // without a usable target must never start a watchdog, because the "reached" check
-  // would never become true and the heater would be forced back on forever.
+  // Observe fresh device data. Never retry ON or restore a target changed by
+  // the user/device: either could override a physical stop or firmware lockout.
   const startHeatWatchdog = (targetTemperature, onTargetReached) => {
-    const watchdogStartedAt = Date.now();
-    const watchdogGeneration = getWorkflowGeneration();
-    let previousTemperature;
-    let sameTemperatureIntervalStreak = 0;
-    let isWatchdogFinished = false;
-    let hasConfirmedHeatOn = false;
-    let heatOnResendCount = 0;
-
-    // Several polls can already sit in the BLE queue when the target is reached, so
-    // this guard makes sure the workflow only ever advances once per heat step.
-    const finishWatchdog = (onFinished) => {
-      if (isWatchdogFinished) {
-        return;
-      }
-      isWatchdogFinished = true;
+    const startedAt = Date.now();
+    const generation = getWorkflowGeneration();
+    let finished = false;
+    let pending = false;
+    let confirmedHeat = false;
+    const active = () => !finished && generation === getWorkflowGeneration() && isWorkflowRuntimeCurrent();
+    const finish = (callback) => {
+      if (!active()) return;
+      finished = true;
       clearIntervals();
       clearTimeouts();
-      onFinished();
+      callback();
     };
-
-    currentIntervals.push(
-      setInterval(() => {
-        const blePayload = async () => {
-          // Polls queued before a cancel would otherwise still reach the device.
-          if (isWatchdogFinished || getWorkflowGeneration() !== watchdogGeneration) {
+    currentIntervals.push(setInterval(() => {
+      if (!active() || pending) return;
+      if (Date.now() - startedAt > heatWatchdogTimeoutInMilliseconds) {
+        finish(() => cancelCurrentWorkflow());
+        return;
+      }
+      pending = true;
+      AddToWorkflowCommand(async () => {
+        try {
+          if (!active()) return;
+          const status = convertBLEtoUint16(await getCharacteristic(register1Uuid).readValue());
+          if (!active()) return;
+          const heatOn = (status & heatingMask) !== 0;
+          dispatch(setIsHeatOn(heatOn));
+          if (!heatOn && (confirmedHeat || Date.now() - startedAt > heatOnConfirmationGraceInMilliseconds)) {
+            finish(() => cancelCurrentWorkflow());
             return;
           }
-
-          if (
-            Date.now() - watchdogStartedAt >
-            heatWatchdogTimeoutInMilliseconds
-          ) {
-            console.warn(
-              "Heat step did not reach its target temperature in time - turning the heater off and aborting the workflow."
-            );
-            finishWatchdog(() => {
-              turnHeatOffImmediately();
-              cancelCurrentWorkflow();
-            });
+          confirmedHeat ||= heatOn;
+          const current = convertCurrentTemperatureCharacteristicToCelcius(
+            await getCharacteristic(currentTemperatureUuid).readValue());
+          if (!active()) return;
+          if (current === null) {
+            finish(() => cancelCurrentWorkflow());
             return;
           }
-
-          const currentTemperature =
-            store.getState().deviceInteraction.currentTemperature;
-
-          if (previousTemperature !== currentTemperature) {
-            previousTemperature = currentTemperature;
-            sameTemperatureIntervalStreak = 0;
-          } else {
-            sameTemperatureIntervalStreak++;
-          }
-
-          //this is arbitrary.  If the on change event is missed heat will hang forever waiting for the target temperature to be reach (even tho it is on the device)
-          //I thought it we read the same temperature 7 times in a row then we should probably reach out to the device.
-          if (sameTemperatureIntervalStreak > 7) {
-            sameTemperatureIntervalStreak = 0;
-            const blePayload = async () => {
-              const temperatureCharacteristic = getCharacteristic(
-                currentTemperatureUuid
-              );
-              const value = await temperatureCharacteristic.readValue();
-              const currentTemperature =
-                convertCurrentTemperatureCharacteristicToCelcius(value);
-              if (currentTemperature === null) {
-                return;
-              }
-              dispatch(setCurrentTemperature(currentTemperature));
-              previousTemperature = currentTemperature;
-              sameTemperatureIntervalStreak = 0;
-            };
-
-            AddToQueue(blePayload);
-          }
-
-          if (currentTemperature >= targetTemperature) {
-            finishWatchdog(onTargetReached);
+          dispatch(setCurrentTemperature(current));
+          const target = convertCurrentTemperatureCharacteristicToCelcius(
+            await getCharacteristic(writeTemperatureUuid).readValue());
+          if (!active()) return;
+          if (target === null || Math.abs(target - targetTemperature) > 0.5) {
+            finish(() => cancelCurrentWorkflow());
             return;
           }
-
-          // if the temperature is changed to be below the target we will never get there.
-          // The workflow must continue onward by any means necessary, therefore we shall set the payload temperature again
-          if (
-            store.getState().deviceInteraction.targetTemperature <
-            targetTemperature
-          ) {
-            writeTargetTemperatureToDevice(targetTemperature);
-          }
-
-          if (store.getState().deviceInteraction.isHeatOn) {
-            hasConfirmedHeatOn = true;
-          } else if (
-            hasConfirmedHeatOn ||
-            Date.now() - watchdogStartedAt > heatOnConfirmationGraceInMilliseconds
-          ) {
-            // The device says the heater is off, and it has either confirmed it was
-            // running before or it has had long enough to report itself on. That is the
-            // device's own auto shutoff, an overheat lockout, or somebody pressing a
-            // heat button - all of them are stop requests and all of them must win.
-            // Switching the heater back on here would override the device's last line
-            // of defense, which is exactly what causes an overheat error.
-            console.warn(
-              "Heater was switched off by the device or by the user - aborting the workflow."
-            );
-            finishWatchdog(() => cancelCurrentWorkflow());
-            return;
-          } else if (heatOnResendCount < maxHeatOnResendAttempts) {
-            // Still inside the startup grace period: our initial command may simply not
-            // have arrived yet. Retry a bounded number of times, never indefinitely.
-            heatOnResendCount++;
-            turnHeatOn(
-              () =>
-                !isWatchdogFinished &&
-                getWorkflowGeneration() === watchdogGeneration
-            );
-          }
-        };
-        AddToQueue(blePayload);
-      }, heatWatchdogPollIntervalInMilliseconds)
-    );
+          if (heatOn && current >= targetTemperature) finish(onTargetReached);
+        } finally {
+          pending = false;
+        }
+      });
+    }, heatWatchdogPollIntervalInMilliseconds));
   };
 
   const onClick = (workflowIndex) => {
     const nextWorkflow = workflows[workflowIndex];
+    if (!nextWorkflow) return;
     const isCancelRequest = nextWorkflow.id === currentWorkflow?.id;
     cancelCurrentWorkflow();
     if (isCancelRequest) {
       return;
     }
 
-    dispatch(setCurrentWorkflow(nextWorkflow));
+    if (!WorkflowConfigValidator({ items: [nextWorkflow], fanOnGlobal })) {
+      alert(t("workflow.invalidConfiguration"));
+      return;
+    }
+    const startGeneration = getWorkflowGeneration();
     const thoughtData = nextWorkflow.payload.map((item, index) => {
       switch (item.type) {
         case WorkflowItemTypes.HEAT_ON: {
@@ -273,8 +207,7 @@ export default function WorkFlow() {
             const isStepStillWanted = () =>
               getWorkflowGeneration() === stepGeneration;
 
-            // A heat step without a usable target temperature (empty, null or out of
-            // range) just switches the heater on - there is nothing to wait for.
+            // The validator allows an explicitly empty target for an ON-only step.
             if (!isValueInValidVolcanoCelciusRange(item.payload)) {
               turnHeatOn(isStepStillWanted);
               executeWithManagedSetTimeout(next);
@@ -293,15 +226,10 @@ export default function WorkFlow() {
           return async (next) => {
             dispatch(setCurrentWorkflowStepId(index + 1));
 
-            // A failed write must not abandon the chain: the following steps usually
-            // contain the heat off, so the workflow has to keep going regardless.
-            try {
-              const characteristic = getCharacteristic(fanOnUuid);
-              const buffer = convertToUInt8BLE(0);
-              await characteristic.writeValue(buffer);
-            } catch (error) {
-              console.warn(`Could not turn the fan on: ${error}`);
-            }
+            const stepGeneration = getWorkflowGeneration();
+            const characteristic = getCharacteristic(fanOnUuid);
+            await characteristic.writeValue(convertToUInt8BLE(0));
+            if (stepGeneration !== getWorkflowGeneration()) return;
 
             const fanOnTime =
               item.type === WorkflowItemTypes.FAN_ON_GLOBAL
@@ -321,16 +249,11 @@ export default function WorkFlow() {
           return async (next) => {
             dispatch(setCurrentWorkflowStepId(index + 1));
 
-            try {
-              const characteristic = getCharacteristic(heatOffUuid);
-              const buffer = convertToUInt8BLE(0);
-              await characteristic.writeValue(buffer);
-              dispatch(setIsHeatOn(false));
-            } catch (error) {
-              // Retry once - this is the step that leaves the device in a safe state.
-              console.warn(`Could not turn the heat off, retrying: ${error}`);
-              turnHeatOffImmediately();
-            }
+            const stepGeneration = getWorkflowGeneration();
+            const characteristic = getCharacteristic(heatOffUuid);
+            await characteristic.writeValue(convertToUInt8BLE(0));
+            if (stepGeneration !== getWorkflowGeneration()) return;
+            dispatch(setIsHeatOn(false));
             executeWithManagedSetTimeout(next);
           };
         }
@@ -372,7 +295,7 @@ export default function WorkFlow() {
             // Skipping the step is the only safe option - waiting for a target that can
             // never be reached would keep the heater on indefinitely.
             if (!isValueInValidVolcanoCelciusRange(nextTemp)) {
-              executeWithManagedSetTimeout(next);
+              cancelCurrentWorkflow();
               return;
             }
 
@@ -381,8 +304,7 @@ export default function WorkFlow() {
             turnHeatOn(() => getWorkflowGeneration() === stepGeneration);
             startHeatWatchdog(nextTemp, () => {
               if (nextWait === 0) {
-                alert(t("workflow.clickOkayToResume"));
-                executeWithManagedSetTimeout(next);
+                pauseWorkflow(() => executeWithManagedSetTimeout(next));
                 return;
               }
 
@@ -399,7 +321,8 @@ export default function WorkFlow() {
             dispatch(setCurrentWorkflowStepId(index + 1));
 
             if (item.payload === 0) {
-              alert(t('workflow.clickOkayToResume'));
+              pauseWorkflow(() => executeWithManagedSetTimeout(next));
+              return;
             }
 
             executeWithManagedSetTimeout(next, item.payload * 1000);
@@ -409,15 +332,17 @@ export default function WorkFlow() {
           return async (next) => {
             dispatch(setCurrentWorkflowStepId(index + 1));
 
+            const generation = getWorkflowGeneration();
             const blePayload = async () => {
               const characteristic = getCharacteristic(LEDbrightnessUuid);
               const buffer = convertToUInt16BLE(item.payload);
               await characteristic.writeValue(buffer);
+              if (generation !== getWorkflowGeneration()) return;
               dispatch(setLEDbrightness(item.payload));
               executeWithManagedSetTimeout(next, 200);
             };
 
-            AddToQueue(blePayload);
+            AddToWorkflowCommand(blePayload);
           };
         }
         default:
@@ -428,7 +353,14 @@ export default function WorkFlow() {
       }
     });
 
-    AddToWorkflowQueue(thoughtData);
+    // The cancellation OFF writes must finish before the replacement workflow is
+    // marked active, otherwise their notifications look like a new device stop.
+    AddToPriorityQueue(async () => {
+      if (startGeneration !== getWorkflowGeneration() ||
+          store.getState().deviceInteraction.controlError) return;
+      dispatch(setCurrentWorkflow(nextWorkflow));
+      AddToWorkflowQueue(thoughtData);
+    });
   };
 
   return (

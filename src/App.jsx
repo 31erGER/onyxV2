@@ -3,12 +3,15 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-route
 import VolcanoLoader from "./features/shared/OutletRenderer/VolcanoLoader";
 import Volcano from "./features/deviceInteraction/DeviceInteraction";
 import ContactMe from "./features/contactMe/ContactMe";
-import { clearCache } from "./services/BleCharacteristicCache";
+
+import DeviceSafetyNotice from "./features/shared/DeviceSafetyNotice";
+import { cancelCurrentWorkflow } from "./services/bleQueueing";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Settings from "./features/settings/Settings";
 import styled, { createGlobalStyle } from "styled-components";
 import { ThemeProvider } from "styled-components";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setControlError } from "./features/deviceInteraction/deviceInteractionSlice";
 import createNeumorphicTheme from "./themes/neumorphic/createNeumorphicTheme";
 import useResolvedMode from "./themes/neumorphic/useResolvedMode";
 import WorkflowEditor from "./features/workflowEditor/WorkflowEditor";
@@ -90,12 +93,16 @@ function AppRoutes({ isMinimalistMode }) {
 }
 
 function App() {
+  const dispatch = useDispatch();
   useEffect(() => {
-    window.onunhandledrejection = (event) => {
+    const onUnhandledRejection = (event) => {
       console.warn(`UNHANDLED PROMISE REJECTION: ${event.reason}`);
-      clearCache();
+      dispatch(setControlError("application"));
+      cancelCurrentWorkflow();
     };
-  }, []);
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+    return () => window.removeEventListener("unhandledrejection", onUnhandledRejection);
+  }, [dispatch]);
 
   const appearanceMode = useSelector(
     (state) => state.settings.config?.appearanceMode || "auto"
@@ -176,6 +183,7 @@ function App() {
         <DragPreview />
         <Div>
           <BrowserRouter basename="/onyxV2">
+            <DeviceSafetyNotice />
             <AppRoutes isMinimalistMode={isMinimalistMode} />
           </BrowserRouter>
         </Div>

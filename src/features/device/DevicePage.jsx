@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+
 import styled, { keyframes, css } from "styled-components";
 import { useTranslation } from "react-i18next";
 import Ble from "../../services/bluetooth";
@@ -10,7 +10,7 @@ import {
   getCharacteristic,
 } from "../../services/BleCharacteristicCache";
 import { clearQueuesAndTimers } from "../../services/bleQueueing";
-import { RE_INITIALIZE_STORE } from "../../constants/actions";
+
 import { bleDeviceUuid } from "../../constants/uuids";
 import PrideText from "../../themes/PrideText";
 import Div from "../shared/styledComponents/RootNonAppOutletDiv";
@@ -22,7 +22,6 @@ import VibrationToggleContainer from "../settings/VibrationToggle/VibrationToggl
 import DisplayOnCoolingToggleContainer from "../settings/DisplayOnCoolingToggle/DisplayOnCoolingToggleContainer";
 import FOrC from "../settings/FOrC/FOrCContainer";
 import FOrCLoader from "../settings/FOrC/FOrCLoader";
-import NeuIconButton from "../shared/neumorphic/NeuIconButton";
 
 const connectPulse = keyframes`
   0%, 100% { transform: scale(1); }
@@ -101,12 +100,11 @@ const DisconnectButton = styled.button`
 
 export default function DevicePage() {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
   const isOnclickInProgressRef = useRef(false);
 
-  const connected = isDeviceConnected();
+  const connected = isDeviceConnected() && !connecting;
 
   const onDisconnected = useCallback(() => {
     clearCache();
@@ -120,8 +118,8 @@ export default function DevicePage() {
     setConnecting(true);
     try {
       isOnclickInProgressRef.current = true;
-      await Ble(() => {}, onDisconnected);
-      dispatch(RE_INITIALIZE_STORE());
+      const connected = await Ble(() => {}, onDisconnected);
+      if (!connected) return;
       navigate("/device", { replace: true });
     } catch (error) {
       console.log(error);
@@ -163,6 +161,9 @@ export default function DevicePage() {
           <ConnectDescription>
             {t("devicePage.connectDescription")}
           </ConnectDescription>
+          <ConnectDescription>
+            {t("safety.backgroundLimit")}
+          </ConnectDescription>
         </ConnectSection>
       </Div>
     );
@@ -174,6 +175,7 @@ export default function DevicePage() {
         <PrideText text={t("devicePage.title")} />
       </h1>
 
+      <ConnectDescription>{t("safety.backgroundLimit")}</ConnectDescription>
       <SettingsSection
         title={t("devicePage.settingsTitle")}
         icon="🌋"

@@ -9,6 +9,7 @@ export const workflowSlice = createSlice({
   name: "workflow",
   initialState: {
     currentWorkflow: undefined,
+    isPaused: false,
     currentWorkflowStepId: undefined,
     currentStepEllapsedTimeInSeconds: 0,
     currentStepStartTimestamp: null,
@@ -16,6 +17,7 @@ export const workflowSlice = createSlice({
       ReadConfigFromLocalStorage().workflows?.lastWorkflowRunId,
   },
   reducers: {
+    setWorkflowPaused: (state, action) => { state.isPaused = action.payload; },
     setCurrentWorkflow: (state, action) => {
       state.currentWorkflow = action.payload;
       const newLastWorkFlowRunId =
@@ -43,6 +45,7 @@ export const workflowSlice = createSlice({
     builder.addCase(RE_INITIALIZE_STORE, () => {
       return {
         currentWorkflow: undefined,
+        isPaused: false,
         currentWorkflowStepId: undefined,
         currentStepEllapsedTimeInSeconds: 0,
         currentStepStartTimestamp: null,
@@ -55,6 +58,7 @@ export const workflowSlice = createSlice({
 
 export const {
   setCurrentWorkflow,
+  setWorkflowPaused,
   setCurrentWorkflowStepId,
   setCurrentStepEllapsedTimeInSeconds,
   setCurrentStepStartTimestamp,

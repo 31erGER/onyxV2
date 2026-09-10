@@ -22,6 +22,7 @@ export default function HeatOn(props) {
       className="heat-air-button"
     >
       <ToggleSwitch
+        controlled
         isToggleOn={props.isHeatOn}
         onText={t("deviceControls.heatOn")}
         offText={<PrideTextWithDiv text={t("deviceControls.heatOff")} />}

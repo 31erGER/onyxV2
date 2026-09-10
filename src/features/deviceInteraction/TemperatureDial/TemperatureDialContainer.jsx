@@ -1,28 +1,14 @@
-import { useEffect } from "react";
+import { queueTemperature } from "../../../services/deviceCommands";
+
 import { useDispatch, useSelector } from "react-redux";
 import TemperatureDial from "./TemperatureDial";
 import { getCharacteristic } from "../../../services/BleCharacteristicCache";
-import {
-  currentTemperatureUuid,
-  register2Uuid,
-  writeTemperatureUuid,
-  heatOnUuid,
-} from "../../../constants/uuids";
-import { AddToQueue, AddToPriorityQueue } from "../../../services/bleQueueing";
-import {
-  convertCurrentTemperatureCharacteristicToCelcius,
-  convertToUInt32BLE,
-  convertToUInt8BLE,
-  isValueInValidVolcanoCelciusRange,
-} from "../../../services/utils";
+import { register2Uuid } from "../../../constants/uuids";
+import { AddToPriorityQueue } from "../../../services/bleQueueing";
+import { convertToUInt32BLE } from "../../../services/utils";
 import { fahrenheitMask, celciusMask } from "../../../constants/masks";
-import {
-  setCurrentTemperature,
-  setTargetTemperature,
-  setIsHeatOn,
-} from "../deviceInteractionSlice";
+
 import { setIsF } from "../../settings/settingsSlice";
-import store from "../../../store";
 
 export default function TemperatureDialContainer() {
   const dispatch = useDispatch();
@@ -34,75 +20,6 @@ export default function TemperatureDialContainer() {
   const targetTemperature = useSelector(
     (state) => state.deviceInteraction.targetTemperature
   );
-
-  useEffect(() => {
-    const handler = () => {
-      if (document.visibilityState === "visible") {
-        setTimeout(() => {
-          const blePayload = async () => {
-            const characteristic = getCharacteristic(currentTemperatureUuid);
-            const value = await characteristic.readValue();
-            const normalizedValue =
-              convertCurrentTemperatureCharacteristicToCelcius(value);
-            if (
-              store.getState().deviceInteraction.currentTemperature !==
-              normalizedValue
-            ) {
-              dispatch(setCurrentTemperature(normalizedValue));
-            }
-          };
-          AddToQueue(blePayload);
-        }, 250);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handler);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handler);
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    const characteristic = getCharacteristic(currentTemperatureUuid);
-    const onCharacteristicChange = (event) => {
-      const currentTemperature =
-        convertCurrentTemperatureCharacteristicToCelcius(event.target.value);
-      if (
-        store.getState().deviceInteraction.currentTemperature !==
-        currentTemperature
-      ) {
-        dispatch(setCurrentTemperature(currentTemperature));
-      }
-    };
-    const BlePayload = async () => {
-      await characteristic.addEventListener(
-        "characteristicvaluechanged",
-        onCharacteristicChange
-      );
-      await characteristic.startNotifications();
-      const value = await characteristic.readValue();
-      const normalizedValue =
-        convertCurrentTemperatureCharacteristicToCelcius(value);
-
-      if (
-        store.getState().deviceInteraction.currentTemperature !==
-        normalizedValue
-      ) {
-        dispatch(setCurrentTemperature(normalizedValue));
-      }
-    };
-    AddToQueue(BlePayload);
-    return () => {
-      const blePayload = async () => {
-        await characteristic?.removeEventListener(
-          "characteristicvaluechanged",
-          onCharacteristicChange
-        );
-      };
-      AddToQueue(blePayload);
-    };
-  }, [dispatch]);
 
   const handleTemperatureUnitToggle = () => {
     const blePayload = async () => {
@@ -124,30 +41,7 @@ export default function TemperatureDialContainer() {
     AddToPriorityQueue(blePayload);
   };
 
-  const onTargetCommit = (celsius) => {
-    // The dial geometry already clamps to the valid range, but never write a
-    // temperature to the device without checking it here as well.
-    if (!isValueInValidVolcanoCelciusRange(celsius)) {
-      return;
-    }
-    dispatch(setTargetTemperature(celsius));
-    const blePayload = async () => {
-      const characteristic = getCharacteristic(writeTemperatureUuid);
-      const buffer = convertToUInt32BLE(celsius * 10);
-      await characteristic.writeValue(buffer);
-    };
-    AddToQueue(blePayload);
-
-    if (!isHeatOn) {
-      const heatPayload = async () => {
-        const characteristic = getCharacteristic(heatOnUuid);
-        const buffer = convertToUInt8BLE(0);
-        await characteristic.writeValue(buffer);
-        dispatch(setIsHeatOn(true));
-      };
-      AddToPriorityQueue(heatPayload);
-    }
-  };
+  const onTargetCommit = (celsius) => queueTemperature(celsius);
 
   return (
     <TemperatureDial
